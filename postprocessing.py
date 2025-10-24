@@ -1,3 +1,13 @@
+'''
+Author: Kelsey Yen, Solaris Technical LLC
+Date: 10-01-2025 
+    - based on SWHC012
+Update #1: 10-21-2025
+    - converts simdata from wide to long table
+Description: This script will run the SQL files and perform calculations used in the DEER-EnergyPlus Models post-processing steps,
+             effectively expediting the SQL and energy savings workbook steps.
+'''
+
 import pandas as pd
 import sqlite3
 import sqlalchemy
@@ -46,41 +56,15 @@ cursor = connection.cursor()
 # Read the SQL script from a file 
 with open('SQL Files/Permutations.sql', 'r') as file: 
     sql_script = file.read() 
- 
-# Execute the SQL scripts 
-try: 
-    cursor.executescript(sql_script) 
-    print("SQL script executed successfully.") 
-except sqlite3.Error as e: 
-    print(f"An error occurred: {e}") 
-
 
 with open('SQL Files/UsePerUnitStd.sql', 'r') as file: 
     sql_script = file.read() 
- 
-try: 
-    cursor.executescript(sql_script) 
-    print("SQL script executed successfully.") 
-except sqlite3.Error as e: 
-    print(f"An error occurred: {e}") 
 
 with open('SQL Files/UsePerUnitMeas.sql', 'r') as file: 
     sql_script = file.read() 
- 
-try: 
-    cursor.executescript(sql_script) 
-    print("SQL script executed successfully.") 
-except sqlite3.Error as e: 
-    print(f"An error occurred: {e}") 
 
 with open('SQL Files/UEC.sql', 'r') as file: 
     sql_script = file.read() 
- 
-try: 
-    cursor.executescript(sql_script) 
-    print("SQL script executed successfully.") 
-except sqlite3.Error as e: 
-    print(f"An error occurred: {e}") 
 
 with open('SQL Files/UES.sql', 'r') as file: 
     sql_script = file.read() 
