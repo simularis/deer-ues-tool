@@ -57,7 +57,7 @@ df = pd.read_csv('simdata.csv')
 df['Demand kW'] = df['Electricity:Facility [J](Hourly)'] * J_to_kW
 
 if Measure_type == "HVAC":
-    df['Electricity/HVAC'] = df['Electricity/Heating'] + df['Electricity/Cooling'] + df['Electricity/Fans']
+    df['HVAC kWh'] = df['Electricity/Heating'] + df['Electricity/Cooling'] + df['Electricity/Fans']
 
 if Norm_unit == "Cap-Tons" and Measure_name == "SWHC012":
     df['NumUnits'] = (df[list(df.filter(regex='Design Size'))].sum(axis=1)) * W_to_tons

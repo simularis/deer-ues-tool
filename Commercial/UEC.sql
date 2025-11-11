@@ -1,7 +1,10 @@
 /*
 This creates the table UEC, unit energy consumption. 
 */
+DROP TABLE IF EXISTS UEC;
+CREATE TABLE UEC AS
 
+SELECT
 Permutations.OfferingID,
 Permutations.MAT,
 Permutations.BldgLoc,
