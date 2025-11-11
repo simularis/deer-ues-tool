@@ -1,27 +1,51 @@
 /*
-This creates the table UEC, which calculates unit energy consumption for each case for the MeasureID. 
+This creates the table UEC, unit energy consumption. 
 */
 
-DROP TABLE IF EXISTS UEC;
-CREATE TABLE UEC AS
+Permutations.OfferingID,
+Permutations.MAT,
+Permutations.BldgLoc,
+Permutations.BldgType,
+Permutations.BldgVint,
+Permutations.BldgHVAC,
+Permutations.PreTechID,
+Permutations.StdTechID,
+Permutations.MeasTechID,
+meas.NormUnit as "NormUnit",
+meas.NumUnits as "NumUnits",
+((pre."Demand kW")/meas.NumUnits) as "PreUECkW",
+(pre."HVAC kWh"/meas.NumUnits) as "PreUECkWh",
+((pre."Natural Gas/Cooling")/meas.NumUnits) as "PreUECtherm",
+((std."Demand kW")/meas.NumUnits) as "StdUECkW",
+(std."HVAC kWh"/meas.NumUnits) as "StdUECkWh",
+((std."Natural Gas/Cooling")/meas.NumUnits) as "StdUECtherm",
+((meas."Demand kW")/meas.NumUnits) as "MeasUECkW",
+(meas."HVAC kWh"/meas.NumUnits) as "MeasUECkWh",
+((meas."Natural Gas/Cooling")/meas.NumUnits) as "MeasUECtherm"
 
-SELECT
-UsePerUnitMeas.OfferingID,
-UsePerUnitMeas.MAT,
-UsePerUnitMeas.BldgLoc,
-UsePerUnitMeas.BldgType,
-UsePerUnitMeas.BldgVint,
-UsePerUnitMeas.BldgHVAC,
-UsePerUnitMeas.PreTechID,
-UsePerUnitMeas.StdTechID,
-UsePerUnitMeas.MeasTechID,
-UsePerUnitMeas.area_sqft,
-UsePerUnitMeas.std_kwh/UsePerUnitMeas.area_sqft as std_kwh_EC,
-UsePerUnitMeas.std_therm/UsePerUnitMeas.area_sqft as std_therm_EC,
-UsePerUnitMeas.std_kw/UsePerUnitMeas.area_sqft as std_kw_EC,
-UsePerUnitMeas.meas_kwh/UsePerUnitMeas.area_sqft as meas_kwh_EC,
-UsePerUnitMeas.meas_therm/UsePerUnitMeas.area_sqft as meas_therm_EC,
-UsePerUnitMeas.meas_kw/UsePerUnitMeas.area_sqft as meas_kw_EC
+FROM Permutations
+LEFT JOIN simdata pre on 
+  pre."TechID"   = Permutations."PreTechID" AND
+  pre."BldgType" = Permutations."BldgType" AND
+  pre."BldgVint" = Permutations."BldgVint" AND
+  pre."BldgLoc"  = Permutations."BldgLoc" AND
+  pre."BldgHVAC" = Permutations."BldgHVAC"
+ LEFT JOIN simdata std on 
+  std."TechID"   = Permutations."StdTechID" AND
+  std."BldgType" = Permutations."BldgType" AND
+  std."BldgVint" = Permutations."BldgVint" AND
+  std."BldgLoc"  = Permutations."BldgLoc" AND
+  std."BldgHVAC" = Permutations."BldgHVAC"
+LEFT JOIN simdata meas on 
+  meas."TechID"   = Permutations."MeasTechID" AND
+  meas."BldgType" = Permutations."BldgType" AND
+  meas."BldgVint" = Permutations."BldgVint" AND
+  meas."BldgLoc"  = Permutations."BldgLoc" AND
+  meas."BldgHVAC" = Permutations."BldgHVAC"
+  
+ ORDER BY 
+  Permutations."OfferingID", Permutations."BldgType", Permutations."BldgHVAC", Permutations."BldgVint", Permutations."BldgLoc"
 
-FROM UsePerUnitMeas
+
+
 
