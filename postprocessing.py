@@ -78,35 +78,37 @@ df.to_sql('simdata', connection, if_exists="replace")
 
 df = pd.read_csv('MeasDef.csv')
 df.to_sql('MeasDef', connection, if_exists="replace")
+# remove building type column from MeasDef, assume building types can be permuted for all offering IDs
 
 # Create a cursor object 
 cursor = connection.cursor() 
  
 # Read the SQL script from a file 
-with open(f'{Sector}/Permutations.sql', 'r') as file: 
-    sql_script = file.read()
+
 try: 
+    with open(f'{Sector}/Permutations.sql', 'r') as file: 
+        sql_script = file.read()
     cursor.executescript(sql_script) 
-    print("SQL script executed successfully.") 
+    print("SQL script executed successfully.")
+    with open(f'{Sector}/UEC.sql', 'r') as file: 
+        sql_script = file.read()
+    cursor.executescript(sql_script) 
+    print("SQL script executed successfully.")
+    with open(f'{Sector}/UES.sql', 'r') as file: 
+        sql_script = file.read() 
+    cursor.executescript(sql_script) 
+    print("SQL script executed successfully.")
+    with open(f'{Sector}/Bldg_Wts.sql', 'r') as file: 
+        sql_script = file.read() 
+    cursor.executescript(sql_script) 
+    print("SQL script executed successfully.")
+    with open(f'{Sector}/Com_Wt.sql', 'r') as file: 
+        sql_script = file.read() 
+    cursor.executescript(sql_script) 
+    print("SQL script executed successfully.")
+
 except sqlite3.Error as e: 
     print(f"An error occurred: {e}")  
-
-with open(f'{Sector}/UEC.sql', 'r') as file: 
-    sql_script = file.read()
-try: 
-    cursor.executescript(sql_script) 
-    print("SQL script executed successfully.") 
-except sqlite3.Error as e: 
-    print(f"An error occurred: {e}")  
-
-with open(f'{Sector}/UES.sql', 'r') as file: 
-    sql_script = file.read() 
- 
-try: 
-    cursor.executescript(sql_script) 
-    print("SQL script executed successfully.") 
-except sqlite3.Error as e: 
-    print(f"An error occurred: {e}")   
 
 # Output results as csv
 df = pd.read_sql_query(f"SELECT * FROM {'UES'}", connection)
