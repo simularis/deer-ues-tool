@@ -1,13 +1,15 @@
 '''
+Description: This script will run the SQL files and perform calculations used in the DEER-EnergyPlus Models post-processing steps,
+             effectively expediting the SQL and energy savings workbook steps.
 Author: Kelsey Yen, Solaris Technical LLC
 Date: 10-01-2025 
-    - based on SWHC012
 Update: 10-21-2025
     - converts simdata from wide to long table
 Update: 11-05-2025
-    - adds alculated columns to simdata input file for SQL queries
-Description: This script will run the SQL files and perform calculations used in the DEER-EnergyPlus Models post-processing steps,
-             effectively expediting the SQL and energy savings workbook steps.
+    - adds calculated columns to simdata input file for SQL queries
+Update: 11-11-2025
+    - adds weighted Com SQL queries
+
 '''
 
 import pandas as pd
