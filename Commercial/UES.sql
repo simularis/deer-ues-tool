@@ -1,5 +1,5 @@
 /*
-This creates the table UES, which calculates unit energy savings for each case for the MeasureID. 
+This creates the table UES, unit energy savings. 
 */
 DROP TABLE IF EXISTS UES;
 CREATE TABLE UES AS
@@ -14,15 +14,22 @@ UEC.BldgHVAC,
 UEC.PreTechID,
 UEC.StdTechID,
 UEC.MeasTechID,
-UEC.area_sqft,
-UEC.std_kwh_EC,
-UEC.std_therm_EC,
-UEC.std_kw_EC,
-UEC.meas_kwh_EC,
-UEC.meas_therm_EC,
-UEC.meas_kw_EC,
-UEC.std_kwh_EC - UEC.meas_kwh_EC as kwh_UES,
-UEC.std_therm_EC - UEC.meas_therm_EC as therm_UES,
-UEC.std_kw_EC - UEC.meas_kw_EC as kw_peak
+UEC.NormUnit,
+UEC.NumUnits,
+UEC.PreUECkW,
+UEC.PreUECkWh,
+UEC.PreUECtherm,
+UEC.StdUECkW,
+UEC.StdUECkWh,
+UEC.StdUECtherm,
+UEC.MeasUECkW,
+UEC.MeasUECkWh,
+UEC.MeasUECtherm,
+UEC.PreUECkW - UEC.MeasUECkW as "UESkW_1",
+UEC.PreUECkWh - UEC.MeasUECkWh as "UESkWh_1",
+UEC.PreUECtherm - UEC.MeasUECtherm as "UEStherm_1",
+UEC.StdUECkW - UEC.MeasUECkW as "UESkW_2",
+UEC.StdUECkWh - UEC.MeasUECkWh as "UESkWh_2",
+UEC.StdUECtherm - UEC.MeasUECtherm as "UEStherm_2"
 
 FROM UEC
