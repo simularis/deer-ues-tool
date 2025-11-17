@@ -8,17 +8,18 @@ CREATE TABLE Permutations AS
 SELECT DISTINCT
 MeasDef.OfferingID,
 MeasDef.MAT,
-simdata.BldgLoc,
-simdata.BldgType,
-simdata.BldgVint,
-simdata.BldgHVAC,
+simdata_story.BldgLoc,
+simdata_story.BldgType,
+simdata_story.BldgVint,
+simdata_story.BldgHVAC,
+simdata_story.Story,
 MeasDef.PreTechID,
 MeasDef.StdTechID,
 MeasDef.MeasTechID
 
-From MeasDef
+FROM MeasDef
 
-JOIN simdata on simdata.BldgType = MeasDef.BldgType and simdata.BldgVint = MeasDef.BldgVint;
+JOIN simdata_story on simdata_story.BldgHVAC = MeasDef.BldgHVAC and simdata_story.BldgVint = MeasDef.BldgVint;
 
 
 
