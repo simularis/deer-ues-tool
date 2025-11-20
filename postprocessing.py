@@ -11,6 +11,8 @@ Update: 11-11-2025
     - adds weighted Com SQL queries
 Update: 11-13-2025
     - created Res SQLs
+Update: 11-20-2025
+    - updated Res SQLs and applied changes to Com SQLs
 '''
 
 import pandas as pd
