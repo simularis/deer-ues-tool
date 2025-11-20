@@ -178,7 +178,7 @@ elif Sector == "Commercial":
 # Output results as csv
 df = pd.read_sql_query(f"SELECT * FROM {'UES'}", connection)
 df.to_csv(f'energysavings_{Measure_name}.csv', index=False)
-print(f"Savings calcs completed for {Measure_name}")
+print(f"Savings calcs completed for {Measure_name}.")
 
 # Commit changes and close the connection 
 connection.commit()
