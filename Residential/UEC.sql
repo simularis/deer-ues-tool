@@ -1,6 +1,4 @@
-/*
-This creates the table UEC, unit energy consumption. 
-*/
+-- run before bldg_wts, res_wts
 DROP TABLE IF EXISTS UEC;
 CREATE TABLE UEC AS
 
@@ -14,36 +12,104 @@ Permutations.BldgHVAC,
 Permutations.PreTechID,
 Permutations.StdTechID,
 Permutations.MeasTechID,
-meas.NormUnit AS "NormUnit",
-meas.NumUnits AS "NumUnits",
-meas."Value Name" AS "Value Name",
-pre.Value/meas.NumUnits AS "preValue",
-std.Value/meas.NumUnits AS "stdValue",
-meas.Value/meas.NumUnits AS "measValue"
+measkW.NormUnit AS "NormUnit",
+measkW.NumUnits AS "NumUnits",
+prekW.Value AS "PrekW",
+prekWh.Value AS "PrekWh",
+pretherm.Value AS "Pretherm",
+stdkW.Value AS "StdkW",
+stdkWh.Value AS "StdkWh",
+stdtherm.Value AS "Stdtherm",
+measkW.Value AS "MeaskW",
+measkWh.Value AS "MeaskWh",
+meastherm.Value AS "Meastherm"
 
 FROM Permutations
+-- outline
+LEFT JOIN simdata_story prekW on 
+  prekW."TechID"   = Permutations."PreTechID" AND
+  prekW."BldgType" = Permutations."BldgType" AND
+  prekW."BldgVint" = Permutations."BldgVint" AND
+  prekW."BldgLoc"  = Permutations."BldgLoc" AND
+  prekW."BldgHVAC" = Permutations."BldgHVAC" AND
+  prekW."Value Name" LIKE 'Demand kW'
+--  prekW."Value Name" LIKE 'Electricity Demand'
+LEFT JOIN simdata_story prekWh on 
+  prekWh."TechID"   = Permutations."PreTechID" AND
+  prekWh."BldgType" = Permutations."BldgType" AND
+  prekWh."BldgVint" = Permutations."BldgVint" AND
+  prekWh."BldgLoc"  = Permutations."BldgLoc" AND
+  prekWh."BldgHVAC" = Permutations."BldgHVAC" AND
+  prekWh."Value Name" LIKE 'HVAC kWh'
+--  prekWh."Value Name" LIKE 'Electricity/%'
+LEFT JOIN simdata_story pretherm on 
+  pretherm."TechID"   = Permutations."PreTechID" AND
+  pretherm."BldgType" = Permutations."BldgType" AND
+  pretherm."BldgVint" = Permutations."BldgVint" AND
+  pretherm."BldgLoc"  = Permutations."BldgLoc" AND
+  pretherm."BldgHVAC" = Permutations."BldgHVAC" AND
+  pretherm."Value Name" LIKE 'HVAC therm'
+--  pretherm."Value Name" LIKE 'Natural Gas/%'
+LEFT JOIN simdata_story stdkW on 
+  stdkW."TechID"   = Permutations."StdTechID" AND
+  stdkW."BldgType" = Permutations."BldgType" AND
+  stdkW."BldgVint" = Permutations."BldgVint" AND
+  stdkW."BldgLoc"  = Permutations."BldgLoc" AND
+  stdkW."BldgHVAC" = Permutations."BldgHVAC" AND
+  stdkW."Value Name" LIKE 'Demand kW'
+--  stdkW."Value Name" LIKE 'Electricity Demand'
+LEFT JOIN simdata_story stdkWh on 
+  stdkWh."TechID"   = Permutations."StdTechID" AND
+  stdkWh."BldgType" = Permutations."BldgType" AND
+  stdkWh."BldgVint" = Permutations."BldgVint" AND
+  stdkWh."BldgLoc"  = Permutations."BldgLoc" AND
+  stdkWh."BldgHVAC" = Permutations."BldgHVAC" AND
+  stdkWh."Value Name" LIKE 'HVAC kWh'
+--  stdkWh."Value Name" LIKE 'Electricity/%'
+LEFT JOIN simdata_story stdtherm on 
+  stdtherm."TechID"   = Permutations."StdTechID" AND
+  stdtherm."BldgType" = Permutations."BldgType" AND
+  stdtherm."BldgVint" = Permutations."BldgVint" AND
+  stdtherm."BldgLoc"  = Permutations."BldgLoc" AND
+  stdtherm."BldgHVAC" = Permutations."BldgHVAC" AND
+  stdtherm."Value Name" LIKE 'HVAC therm'
+--  stdtherm."Value Name" LIKE 'Natural Gas/%'
+ LEFT JOIN simdata_story measkW on 
+  measkW."TechID"   = Permutations."MeasTechID" AND
+  measkW."BldgType" = Permutations."BldgType" AND
+  measkW."BldgVint" = Permutations."BldgVint" AND
+  measkW."BldgLoc"  = Permutations."BldgLoc" AND
+  measkW."BldgHVAC" = Permutations."BldgHVAC" AND
+  measkW."Value Name" LIKE 'Demand kW'
+--  measkW."Value Name" LIKE 'Electricity Demand'
+LEFT JOIN simdata_story measkWh on 
+  measkWh."TechID"   = Permutations."MeasTechID" AND
+  measkWh."BldgType" = Permutations."BldgType" AND
+  measkWh."BldgVint" = Permutations."BldgVint" AND
+  measkWh."BldgLoc"  = Permutations."BldgLoc" AND
+  measkWh."BldgHVAC" = Permutations."BldgHVAC" AND
+  measkWh."Value Name" LIKE 'HVAC kWh'
+--  measkWh."Value Name" LIKE 'Electricity/%'
+LEFT JOIN simdata_story meastherm on 
+  meastherm."TechID"   = Permutations."MeasTechID" AND
+  meastherm."BldgType" = Permutations."BldgType" AND
+  meastherm."BldgVint" = Permutations."BldgVint" AND
+  meastherm."BldgLoc"  = Permutations."BldgLoc" AND
+  meastherm."BldgHVAC" = Permutations."BldgHVAC" AND
+  meastherm."Value Name" LIKE 'HVAC therm'
+--  meastherm."Value Name" LIKE 'Natural Gas/%'
 
-LEFT JOIN simdata_story pre on 
-  pre."TechID"   = Permutations."PreTechID" AND
-  pre."BldgType" = Permutations."BldgType" AND
-  pre."BldgVint" = Permutations."BldgVint" AND
-  pre."BldgLoc"  = Permutations."BldgLoc" AND
-  pre."BldgHVAC" = Permutations."BldgHVAC"
- LEFT JOIN simdata_story std on 
-  std."TechID"   = Permutations."StdTechID" AND
-  std."BldgType" = Permutations."BldgType" AND
-  std."BldgVint" = Permutations."BldgVint" AND
-  std."BldgLoc"  = Permutations."BldgLoc" AND
-  std."BldgHVAC" = Permutations."BldgHVAC"
-LEFT JOIN simdata_story meas on 
-  meas."TechID"   = Permutations."MeasTechID" AND
-  meas."BldgType" = Permutations."BldgType" AND
-  meas."BldgVint" = Permutations."BldgVint" AND
-  meas."BldgLoc"  = Permutations."BldgLoc" AND
-  meas."BldgHVAC" = Permutations."BldgHVAC"
-  
- ORDER BY 
-  Permutations."OfferingID", Permutations."BldgType", Permutations."BldgHVAC", Permutations."BldgVint", Permutations."BldgLoc"
-
-
-
+GROUP BY
+  Permutations.OfferingID,
+  Permutations.MAT,
+  Permutations.BldgLoc,
+  Permutations.BldgType,
+  Permutations.BldgVint,
+  Permutations.BldgHVAC
+ 
+ORDER BY 
+  Permutations.OfferingID,
+  Permutations.BldgType,
+  Permutations.BldgHVAC,
+  Permutations.BldgVint,
+  Permutations.BldgLoc;

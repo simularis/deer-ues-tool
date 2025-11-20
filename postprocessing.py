@@ -85,57 +85,98 @@ df_final = df_long.to_csv("simdata_res_long.csv", index=False)
 print("simdata processed")
 
 # Connect to the database (or create it if it doesn't exist) 
-connection = sqlite3.connect('postprocessing_res.db')
- 
-df = pd.read_csv('simdata_res_long.csv')
+connection = sqlite3.connect('postprocessing.db')
+
+# Create a cursor object 
+cursor = connection.cursor()
+
+# Read in tables and simdata 
+df = pd.read_csv('simdata_res_long.csv', low_memory=False)
 df.to_sql('simdata', connection, if_exists="replace")
 
 df = pd.read_csv(f'MeasDef_{Measure_name}.csv')
 df.to_sql('MeasDef', connection, if_exists="replace")
 # remove building type column from MeasDef, assume building types can be permuted for all offering IDs
 
-# Create a cursor object 
-cursor = connection.cursor()
- 
+df = pd.read_csv('NumStor.csv')
+df.to_sql('NumStor', connection, if_exists="replace")
+
 # Read the SQL script from a file 
-try: 
-    with open(f'{Sector}/Story_Wts.sql', 'r') as file: 
-        sql_script = file.read()
-    cursor.executescript(sql_script)
-    print("SQL script executed successfully.")
-    
-    with open(f'{Sector}/Permutations.sql', 'r') as file: 
-        sql_script = file.read()
-    cursor.executescript(sql_script)
-    print("SQL script executed successfully.")
+if Sector == "Residential":
+    df = pd.read_csv('wts_res_bldg.csv')
+    df.to_sql('wts_res_bldg', connection, if_exists="replace")
 
-    with open(f'{Sector}/UEC.sql', 'r') as file: 
-        sql_script = file.read()
-    cursor.executescript(sql_script)
-    print("SQL script executed successfully.")
+    try: 
+        with open(f'{Sector}/Story_Wts.sql', 'r') as file: 
+            sql_script = file.read()
+        cursor.executescript(sql_script)
+        print("Story_Wts executed successfully.")
+        
+        with open(f'{Sector}/Permutations.sql', 'r') as file: 
+            sql_script = file.read()
+        cursor.executescript(sql_script)
+        print("Permutations script executed successfully.")
 
-#     with open(f'{Sector}/UES.sql', 'r') as file: 
-#         sql_script = file.read()
-#     cursor.executescript(sql_script)
-#     print("SQL script executed successfully.")
+        with open(f'{Sector}/UEC.sql', 'r') as file: 
+            sql_script = file.read()
+        cursor.executescript(sql_script)
+        print("UEC script executed successfully.")
 
-#     with open(f'{Sector}/Bldg_Wts.sql', 'r') as file: 
-#         sql_script = file.read()
-#     cursor.executescript(sql_script)
-#     print("SQL script executed successfully.")
+        with open(f'{Sector}/UES.sql', 'r') as file: 
+            sql_script = file.read()
+        cursor.executescript(sql_script)
+        print("UES script executed successfully.")
 
-#     with open(f'{Sector}/Com_Wt.sql', 'r') as file: 
-#         sql_script = file.read()
-#     cursor.executescript(sql_script)
-#     print("SQL script executed successfully.")
+        with open(f'{Sector}/Bldg_Wts.sql', 'r') as file: 
+            sql_script = file.read()
+        cursor.executescript(sql_script)
+        print("Bldg_Wts script executed successfully.")
 
-except sqlite3.Error as e: 
-    print(f"An error occurred: {e}")
+        with open(f'{Sector}/Res.sql', 'r') as file: 
+            sql_script = file.read()
+        cursor.executescript(sql_script)
+        print("Res script executed successfully.")
 
-# # Output results as csv
-# df = pd.read_sql_query(f"SELECT * FROM {'UES'}", connection)
-# df.to_csv('energysavings.csv')
-# print('Results generated.')
+    except sqlite3.Error as e: 
+        print(f"An error occurred: {e}")
+
+elif Sector == "Commercial":
+    df = pd.read_csv('wts_com_bldg_2026.csv')
+    df.to_sql('wts_com_bldg_2026', connection, if_exists="replace")
+
+    try:     
+        with open(f'{Sector}/Permutations.sql', 'r') as file: 
+            sql_script = file.read()
+        cursor.executescript(sql_script)
+        print("Permutations script executed successfully.")
+
+        with open(f'{Sector}/UEC.sql', 'r') as file: 
+            sql_script = file.read()
+        cursor.executescript(sql_script)
+        print("UEC script executed successfully.")
+
+        with open(f'{Sector}/UES.sql', 'r') as file: 
+            sql_script = file.read()
+        cursor.executescript(sql_script)
+        print("UES script executed successfully.")
+
+        with open(f'{Sector}/Bldg_Wts.sql', 'r') as file: 
+            sql_script = file.read()
+        cursor.executescript(sql_script)
+        print("Bldg_Wts script executed successfully.")
+
+        with open(f'{Sector}/Com.sql', 'r') as file: 
+            sql_script = file.read()
+        cursor.executescript(sql_script)
+        print("Res script executed successfully.")
+
+    except sqlite3.Error as e: 
+        print(f"An error occurred: {e}")
+
+# Output results as csv
+df = pd.read_sql_query(f"SELECT * FROM {'UES'}", connection)
+df.to_csv(f'energysavings_{Measure_name}.csv', index=False)
+print(f"Savings calcs completed for {Measure_name}")
 
 # Commit changes and close the connection 
 connection.commit()

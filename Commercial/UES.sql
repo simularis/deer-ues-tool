@@ -1,6 +1,5 @@
-/*
-This creates the table UES, unit energy savings. 
-*/
+-- calculated unit energy savings
+
 DROP TABLE IF EXISTS UES;
 CREATE TABLE UES AS
 
@@ -32,4 +31,4 @@ UEC.StdUECkW - UEC.MeasUECkW as "UESkW_2",
 UEC.StdUECkWh - UEC.MeasUECkWh as "UESkWh_2",
 UEC.StdUECtherm - UEC.MeasUECtherm as "UEStherm_2"
 
-FROM UEC
+FROM UEC;
