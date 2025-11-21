@@ -14,15 +14,15 @@ Permutations.StdTechID,
 Permutations.MeasTechID,
 measkW.NormUnit AS "NormUnit",
 measkW.NumUnits AS "NumUnits",
-prekW.Value AS "PrekW",
-prekWh.Value AS "PrekWh",
-pretherm.Value AS "Pretherm",
-stdkW.Value AS "StdkW",
-stdkWh.Value AS "StdkWh",
-stdtherm.Value AS "Stdtherm",
-measkW.Value AS "MeaskW",
-measkWh.Value AS "MeaskWh",
-meastherm.Value AS "Meastherm"
+prekW.Value AS "PreUECkW",
+prekWh.Value AS "PreUECkWh",
+pretherm.Value AS "PreUECtherm",
+stdkW.Value AS "StdUECkW",
+stdkWh.Value AS "StdUECkWh",
+stdtherm.Value AS "StdUECtherm",
+measkW.Value AS "MeasUECkW",
+measkWh.Value AS "MeasUECkWh",
+meastherm.Value AS "MeasUECtherm"
 
 FROM Permutations
 -- outline
@@ -109,7 +109,7 @@ GROUP BY
  
 ORDER BY 
   Permutations.OfferingID,
+  Permutations.BldgLoc,
   Permutations.BldgType,
   Permutations.BldgHVAC,
-  Permutations.BldgVint,
-  Permutations.BldgLoc;
+  Permutations.BldgVint;

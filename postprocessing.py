@@ -17,35 +17,6 @@ Update: 11-20-2025
 
 import pandas as pd
 import sqlite3
-import sqlalchemy
-
-# # IMPORT THE SQALCHEMY LIBRARY's CREATE_ENGINE METHOD
-# from sqlalchemy import create_engine
-
-# # DEFINE THE DATABASE CREDENTIALS
-# user = 'sptviewer'
-# password = 'deereddev'
-# host = '127.0.0.1'
-# port = 5432
-# database = 'exante'
-
-# # PYTHON FUNCTION TO CONNECT TO THE POSTGRESQL DATABASE AND
-# # RETURN THE SQLACHEMY ENGINE OBJECT
-# def get_connection():
-#     return create_engine(
-#         url="postgresql://{0}:{1}@{2}:{3}/{4}".format(
-#             user, password, host, port, database
-#         )
-#     )
-
-# if __name__ == '__main__':
-#     try:
-#         # GET THE CONNECTION OBJECT (ENGINE) FOR THE DATABASE
-#         engine = get_connection()
-#         print(
-#             f"Connection to the {host} for user {user} created successfully.")
-#     except Exception as ex:
-#         print("Connection could not be made due to the following error: \n", ex)
 
 Measure_name = "SWHC049"
 Measure_type = "HVAC"
@@ -53,17 +24,19 @@ Sector = "Residential"
 Norm_unit = "Cap-Tons"
 
 # Conversions
-J_to_kW = 0.000000277778
-m2_to_sqft = 10.764
+J_to_kW = 1/3600000
+m2_to_sqft = 10.7639
 W_to_tons = 0.0002843451
+kWh_to_therms = 0.0341295763495688
 
 # Editing simdata for measure specific calcs
-df = pd.read_csv('simdata_res.csv')
+df = pd.read_csv('simdata.csv')
+
 df['Demand kW'] = df['Electricity:Facility [J](Hourly)'] * J_to_kW
 
 if Measure_type == "HVAC":
     df['HVAC kWh'] = df['Electricity/Heating'] + df['Electricity/Cooling'] + df['Electricity/Fans']
-    df['HVAC therm'] = df['Natural Gas/Heating'] + df['Natural Gas/Cooling'] + df['Natural Gas/Fans']
+    df['HVAC therm'] = (df['Natural Gas/Heating'] + df['Natural Gas/Cooling'] + df['Natural Gas/Fans']) * kWh_to_therms
 
 df['NormUnit'] = Norm_unit
 
@@ -72,17 +45,19 @@ if Norm_unit == "Cap-Tons" and Measure_name == "SWHC012":
 elif Norm_unit == "Cap-Tons":
     df['NumUnits'] = df['Cooling Capacity'] * W_to_tons
 elif Norm_unit == "Area-ft-BA":
-    df['NumUnits'] = df['Area/Total'] * m2_to_sqft
+    df['NumUnits'] = df['Area/Conditioned Total'] * m2_to_sqft
 
-df_edited = df.to_csv("simdata_res_edited.csv", index=False)
+# maybe have normunits be separate measure-specific input table
+
+df_edited = df.to_csv("simdata_edited.csv", index=False)
 
 # simdata long table format
-df_wide = pd.read_csv("simdata_res_edited.csv")
+df_wide = pd.read_csv("simdata_edited.csv")
 
 df_long = pd.melt (df_wide, id_vars = ["File Name","BldgLoc", "BldgType", "Story", "BldgHVAC" ,
                                        "BldgVint", "TechGroup", "TechType", "TechID","NormUnit","NumUnits"], var_name = "Value Name", value_name = "Value")
 
-df_final = df_long.to_csv("simdata_res_long.csv", index=False)
+df_final = df_long.to_csv("simdata_long.csv", index=False)
 
 print("simdata processed")
 
@@ -93,7 +68,7 @@ connection = sqlite3.connect('postprocessing.db')
 cursor = connection.cursor()
 
 # Read in tables and simdata 
-df = pd.read_csv('simdata_res_long.csv', low_memory=False)
+df = pd.read_csv('simdata_long.csv', low_memory=False)
 df.to_sql('simdata', connection, if_exists="replace")
 
 df = pd.read_csv(f'MeasDef_{Measure_name}.csv')
