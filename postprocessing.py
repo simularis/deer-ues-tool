@@ -13,15 +13,25 @@ Update: 11-13-2025
     - created Res SQLs
 Update: 11-20-2025
     - updated Res SQLs and applied changes to Com SQLs
+Update: 1-14-2026
+    - updated script with terminal user inputs for future UI development
+
 '''
 
 import pandas as pd
 import sqlite3
 
-Measure_name = "SWHC046"
-Measure_type = "HVAC"
-Sector = "Commercial"
-Norm_unit = "Cap-Tons"
+# Reading in user input values (later develop into UI with gooey)
+print("Enter measure name (SWXX0XX)")
+Measure_name = str(input())
+print("Enter end-use category (HVAC, Lighting, BldgEnv, etc.)")
+End_use = str(input())
+print("Enter sector (Residential, Commercial)")
+Sector = str(input())
+print("Enter normalizing unit (Cap-Tons, Area-ft-BA, Each)")
+Norm_unit = str(input())
+
+print("\nPost-Processing Script Inputs:\nMeasure Name:",Measure_name,"\nEnd-Use Category:",End_use, "\nSector:",Sector,"\nNormalizing Unit",Norm_unit)
 
 # Conversions
 J_to_kW = 1/3600000
@@ -30,11 +40,11 @@ W_to_tons = 0.0002843451
 kWh_to_therms = 0.0341295763495688
 
 # Editing simdata for measure specific calcs
-df = pd.read_csv('simdata_SWHC046.csv')
+df = pd.read_csv('simdata_SWHC012.csv')
 
 df['Demand kW'] = df['Electricity:Facility [J](Hourly)'] * J_to_kW
 
-if Measure_type == "HVAC":
+if End_use == "HVAC":
     df['HVAC kWh'] = df['Electricity/Heating'] + df['Electricity/Cooling'] + df['Electricity/Fans']
     df['HVAC therm'] = (df['Natural Gas/Heating'] + df['Natural Gas/Cooling'] + df['Natural Gas/Fans']) * kWh_to_therms
 
@@ -54,7 +64,7 @@ df_edited = df.to_csv("simdata_edited.csv", index=False)
 # simdata long table format
 df_wide = pd.read_csv("simdata_edited.csv")
 
-df_long = pd.melt (df_wide, id_vars = ["File Name","BldgLoc", "BldgType", "Story", "BldgHVAC" ,
+df_long = pd.melt(df_wide, id_vars = ["File Name","BldgLoc", "BldgType", "Story", "BldgHVAC" ,
                                        "BldgVint", "TechGroup", "TechType", "TechID","NormUnit","NumUnits"], var_name = "Value Name", value_name = "Value")
 
 df_final = df_long.to_csv("simdata_long.csv", index=False)
@@ -117,7 +127,7 @@ if Sector == "Residential":
     except sqlite3.Error as e: 
         print(f"An error occurred: {e}")
 
-else:
+elif Sector == "Commercial":
     df = pd.read_csv('wts_com_bldg_2026.csv')
     df.to_sql('wts_com_bldg_2026', connection, if_exists="replace")
 
