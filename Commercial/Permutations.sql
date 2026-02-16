@@ -17,9 +17,4 @@ MeasDef.MeasTechID
 
 From MeasDef
 
-JOIN simdata on simdata.BldgType = MeasDef.BldgType and simdata.BldgVint = MeasDef.BldgVint;
-
-
-
-
-
+JOIN simdata on simdata.BldgHVAC = MeasDef.BldgHVAC and simdata.BldgVint = MeasDef.BldgVint;
