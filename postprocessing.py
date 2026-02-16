@@ -18,9 +18,9 @@ Update: 11-20-2025
 import pandas as pd
 import sqlite3
 
-Measure_name = "SWHC049"
+Measure_name = "SWHC046"
 Measure_type = "HVAC"
-Sector = "Residential"
+Sector = "Commercial"
 Norm_unit = "Cap-Tons"
 
 # Conversions
@@ -30,7 +30,7 @@ W_to_tons = 0.0002843451
 kWh_to_therms = 0.0341295763495688
 
 # Editing simdata for measure specific calcs
-df = pd.read_csv('simdata.csv')
+df = pd.read_csv('simdata_SWHC046.csv')
 
 df['Demand kW'] = df['Electricity:Facility [J](Hourly)'] * J_to_kW
 
@@ -117,7 +117,7 @@ if Sector == "Residential":
     except sqlite3.Error as e: 
         print(f"An error occurred: {e}")
 
-elif Sector == "Commercial":
+else:
     df = pd.read_csv('wts_com_bldg_2026.csv')
     df.to_sql('wts_com_bldg_2026', connection, if_exists="replace")
 
@@ -125,7 +125,7 @@ elif Sector == "Commercial":
         with open(f'{Sector}/Permutations.sql', 'r') as file: 
             sql_script = file.read()
         cursor.executescript(sql_script)
-        print("Permutations script executed successfully.")
+        print("Com permutations script executed successfully.")
 
         with open(f'{Sector}/UEC.sql', 'r') as file: 
             sql_script = file.read()
