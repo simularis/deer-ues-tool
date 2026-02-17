@@ -26,7 +26,6 @@ measkWh.Value/measkW.NumUnits AS "MeasUECkWh",
 meastherm.Value/measkW.NumUnits AS "MeasUECtherm"
 
 FROM Permutations
--- outline
 LEFT JOIN simdata prekW on 
   prekW."TechID"   = Permutations."PreTechID" AND
   prekW."BldgType" = Permutations."BldgType" AND
