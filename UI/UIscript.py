@@ -6,9 +6,8 @@ from zipfile import ZipFile
 
 from tqdm import tqdm
 
-def say_hello(name: str):
-    print("Hello, world.")
-    print(f"Hello, {name}.")
+def measure_name(name: str):
+    print(f"Measure name is: {name}.")
 
 def add_two_numbers(number1, number2):
     sum = number1 + number2
@@ -106,11 +105,11 @@ def main(inargs: list = None, use_tqdm=True):
 
     # Create the parser for hello world.
     parser_a = subparsers.add_parser(
-        name='say_hello',
-        help='Says hello to you.'
+        name='measure_name',
+        help='Inputs measure name.'
     )
-    parser_a.add_argument('name', type=str, help='Enter your name')
-    parser_a.set_defaults(func=say_hello)
+    parser_a.add_argument('measure name', type=str, help='Enter measure name')
+    parser_a.set_defaults(func=measure_name)
 
     # Create the parser for adding numbers.
     parser_b = subparsers.add_parser(
@@ -149,8 +148,8 @@ def main(inargs: list = None, use_tqdm=True):
     args = parser.parse_args(inargs)
     #if args.subparser_name:
     #    args.func(args)
-    if args.subparser_name == "say_hello":
-        say_hello(args.name)
+    if args.subparser_name == "measure_name":
+        measure_name(args.name)
     elif args.subparser_name == "add_numbers":
         add_two_numbers(*args.numbers)
     elif args.subparser_name == "bake":

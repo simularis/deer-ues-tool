@@ -12,23 +12,20 @@ from gooey import Gooey, GooeyParser
     }
 )
 def main_gooey2(inargs: list = None, use_tqdm=False):
-    parser = GooeyParser(
-        description="Multipurpose tool with FileChooser.",
-        epilog=None
-    )
+    parser = GooeyParser(description="Graphic UI for post-processing script.")
 
     subparsers = parser.add_subparsers(
         title='subcommands',
         description='valid subcommands',
         dest='subparser_name')
 
-    # Create the parser for hello world.
+    # Create the parser for measure name.
     parser_a = subparsers.add_parser(
-        name='say_hello',
-        help='Says hello to you.'
+        name='measure_name',
+        help='Inputs measure name.'
     )
-    parser_a.add_argument('name', type=str, help='Enter your name')
-    parser_a.set_defaults(func=say_hello)
+    parser_a.add_argument('measure name', type=str, help='Enter measure name')
+    parser_a.set_defaults(func=measure_name)
 
     # Create the parser for adding numbers.
     parser_b = subparsers.add_parser(
@@ -70,8 +67,8 @@ def main_gooey2(inargs: list = None, use_tqdm=False):
     args = parser.parse_args(inargs)
     #if args.subparser_name:
     #    args.func(args)
-    if args.subparser_name == "say_hello":
-        say_hello(args.name)
+    if args.subparser_name == "measure_name":
+        measure_name(args.name)
     elif args.subparser_name == "add_numbers":
         add_two_numbers(*args.numbers)
     elif args.subparser_name == "bake":
