@@ -11,6 +11,8 @@ Update: 11-11-2025
     - adds weighted Com SQL queries
 Update: 11-13-2025
     - created Res SQLs
+Update: 11-20-2025
+    - updated Res SQLs and applied changes to Com SQLs
 Update: 1-14-2026
     - updated script with terminal user inputs for future UI development
 '''
@@ -31,17 +33,19 @@ Norm_unit = str(input())
 print("\nPost-Processing Script Inputs:\nMeasure Name:",Measure_name,"\nEnd-Use Category:",Use_category, "\nSector:",Sector,"\nNormalizing Unit",Norm_unit)
 
 # Conversions
-J_to_kW = 0.000000277778
-m2_to_sqft = 10.764
+J_to_kW = 1/3600000
+m2_to_sqft = 10.7639
 W_to_tons = 0.0002843451
+kWh_to_therms = 0.0341295763495688
 
 # Editing simdata for measure specific calcs
-df = pd.read_csv('simdata_res.csv')
+df = pd.read_csv('simdata.csv')
+
 df['Demand kW'] = df['Electricity:Facility [J](Hourly)'] * J_to_kW
 
 if Use_category == "HVAC":
     df['HVAC kWh'] = df['Electricity/Heating'] + df['Electricity/Cooling'] + df['Electricity/Fans']
-    df['HVAC therm'] = df['Natural Gas/Heating'] + df['Natural Gas/Cooling'] + df['Natural Gas/Fans']
+    df['HVAC therm'] = (df['Natural Gas/Heating'] + df['Natural Gas/Cooling'] + df['Natural Gas/Fans']) * kWh_to_therms
 
 df['NormUnit'] = Norm_unit
 
@@ -50,7 +54,9 @@ if Norm_unit == "Cap-Tons" and Measure_name == "SWHC012":
 elif Norm_unit == "Cap-Tons":
     df['NumUnits'] = df['Cooling Capacity'] * W_to_tons
 elif Norm_unit == "Area-ft-BA":
-    df['NumUnits'] = df['Area/Total'] * m2_to_sqft
+    df['NumUnits'] = df['Area/Conditioned Total'] * m2_to_sqft
+
+# maybe have normunits be separate measure-specific input table
 
 df_edited = df.to_csv("simdata_edited.csv", index=False)
 
@@ -80,7 +86,7 @@ df.to_sql('MeasDef', connection, if_exists="replace")
 
 df = pd.read_csv('NumStor.csv')
 df.to_sql('NumStor', connection, if_exists="replace")
- 
+
 # Read the SQL script from a file 
 if Sector == "Residential":
     df = pd.read_csv('wts_res_bldg.csv')

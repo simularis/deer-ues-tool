@@ -1,5 +1,7 @@
+-- inserts Com building type rows
 DELETE FROM UES WHERE "BldgType" = 'Com';
 INSERT INTO UES
+
 SELECT
 OfferingID,
 MAT,
@@ -29,13 +31,14 @@ NormUnit,
 (SUM(UEStherm_2) / SUM(wt_bldg)) AS "UEStherm_2"
 
 FROM UES_Wts
+
 GROUP BY
-"OfferingID",
-"BldgVint",
-"BldgLoc",
-"BldgHVAC",
-"NormUnit"
+OfferingID,
+BldgVint,
+BldgLoc,
+BldgHVAC,
+NormUnit
 ORDER BY 
-"OfferingID",
-"BldgVint",
-"BldgHVAC";
+OfferingID,
+BldgVint,
+BldgHVAC;

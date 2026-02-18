@@ -1,6 +1,5 @@
-/*
-This creates the table Permutations, which is based on the available offering IDs. 
-*/
+-- creates permutations based on the available offering IDs
+
 
 DROP TABLE IF EXISTS Permutations;
 CREATE TABLE Permutations AS 
