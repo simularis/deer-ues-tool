@@ -58,15 +58,7 @@ def main():
         help='Select normalizing unit.'
         )
 
-    #check box
-    input.add_argument(
-        '-f', '--foo',
-        metavar='Some Flag',
-        action='store_true',
-        help='Turn things on and off.'
-    )
-
-    #output results to user
+    #output submitted information to user
     args = parser.parse_args()
     print(f'Measure Name: {args.MeasureName} \nSector: {args.Sector} \nUse Category: {args.UseCategory} \nNormalizing Unit: {args.NormalizingUnit}')
 
