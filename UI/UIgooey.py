@@ -1,3 +1,9 @@
+'''
+1-15-2026: Created version 1 of UI
+1-27-2026: Configured script to use UI inputs
+
+'''
+
 from argparse import ArgumentParser
 from time import sleep
 from pathlib import Path
@@ -58,6 +64,12 @@ def main():
         help='Select normalizing unit.'
         )
 
+    #File: File chooser
+    input.add_argument(
+        '--SimdataFile',
+        widget="FileChooser",
+        help="Select simdata file to post-process."
+    )
     #output submitted information to user
     args = parser.parse_args()
     print(f'Measure Name: {args.MeasureName} \nSector: {args.Sector} \nUse Category: {args.UseCategory} \nNormalizing Unit: {args.NormalizingUnit}')
