@@ -135,7 +135,7 @@ elif Sector == "Commercial":
         with open(f'{Sector}/Permutations.sql', 'r') as file: 
             sql_script = file.read()
         cursor.executescript(sql_script)
-        print("Com permutations script executed successfully.")
+        print("Permutations script executed successfully.")
 
         with open(f'{Sector}/UEC.sql', 'r') as file: 
             sql_script = file.read()
@@ -155,7 +155,7 @@ elif Sector == "Commercial":
         with open(f'{Sector}/Com.sql', 'r') as file: 
             sql_script = file.read()
         cursor.executescript(sql_script)
-        print("Res script executed successfully.")
+        print("Com script executed successfully.")
 
     except sqlite3.Error as e: 
         print(f"An error occurred: {e}")
