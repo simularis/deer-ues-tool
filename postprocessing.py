@@ -25,13 +25,13 @@ import sqlite3
 print("Enter measure name (SWXX0XX)")
 Measure_name = str(input())
 print("Enter end-use category (HVAC, Lighting, BldgEnv, etc.)")
-End_use = str(input())
+Use_category = str(input())
 print("Enter sector (Residential, Commercial)")
 Sector = str(input())
 print("Enter normalizing unit (Cap-Tons, Area-ft-BA, Each)")
 Norm_unit = str(input())
 
-print("\nPost-Processing Script Inputs:\nMeasure Name:",Measure_name,"\nEnd-Use Category:",End_use, "\nSector:",Sector,"\nNormalizing Unit",Norm_unit)
+print(f"\nPost-Processing Script Inputs:\nMeasure Name: {Measure_name}\nEnd-Use Category: {Use_category}\nSector: {Sector}\nNormalizing Unit: {Norm_unit}")
 
 # Conversions
 J_to_kW = 1/3600000
@@ -40,11 +40,11 @@ W_to_tons = 0.0002843451
 kWh_to_therms = 0.0341295763495688
 
 # Editing simdata for measure specific calcs
-df = pd.read_csv('simdata_SWHC012.csv')
+df = pd.read_csv(f'simdata_{Measure_name}.csv')
 
 df['Demand kW'] = df['Electricity:Facility [J](Hourly)'] * J_to_kW
 
-if End_use == "HVAC":
+if Use_category == "HVAC":
     df['HVAC kWh'] = df['Electricity/Heating'] + df['Electricity/Cooling'] + df['Electricity/Fans']
     df['HVAC therm'] = (df['Natural Gas/Heating'] + df['Natural Gas/Cooling'] + df['Natural Gas/Fans']) * kWh_to_therms
 
