@@ -31,7 +31,7 @@ Sector = str(input())
 print("Enter normalizing unit (Cap-Tons, Area-ft-BA, Each)")
 Norm_unit = str(input())
 
-print(f"\nPost-Processing Script Inputs:\nMeasure Name: {Measure_name}\nEnd-Use Category: {Use_category}\nSector: {Sector}\nNormalizing Unit: {Norm_unit}")
+print(f"\nPost-Processing Script Inputs:\nMeasure Name: {Measure_name}\nEnd-Use Category: {Use_category}\nSector: {Sector}\nNormalizing Unit: {Norm_unit}\n")
 
 # Conversions
 J_to_kW = 1/3600000
@@ -44,15 +44,15 @@ df = pd.read_csv(f'simdata_{Measure_name}.csv')
 
 df['Demand kW'] = df['Electricity:Facility [J](Hourly)'] * J_to_kW
 
+#Determing which use categories are needed for all measure types (HVAC, lighting, service, etc)
 if Use_category == "HVAC":
     df['HVAC kWh'] = df['Electricity/Heating'] + df['Electricity/Cooling'] + df['Electricity/Fans']
     df['HVAC therm'] = (df['Natural Gas/Heating'] + df['Natural Gas/Cooling'] + df['Natural Gas/Fans']) * kWh_to_therms
 
+#Norm units must be summed prior to post-processing
 df['NormUnit'] = Norm_unit
 
-if Norm_unit == "Cap-Tons" and Measure_name == "SWHC012":
-    df['NumUnits'] = (df[list(df.filter(regex='Design Size'))].sum(axis=1)) * W_to_tons
-elif Norm_unit == "Cap-Tons":
+if Norm_unit == "Cap-Tons":
     df['NumUnits'] = df['Cooling Capacity'] * W_to_tons
 elif Norm_unit == "Area-ft-BA":
     df['NumUnits'] = df['Area/Conditioned Total'] * m2_to_sqft
