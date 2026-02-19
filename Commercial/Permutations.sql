@@ -15,9 +15,11 @@ MeasDef.PreTechID,
 MeasDef.StdTechID,
 MeasDef.MeasTechID
 
-From MeasDef
+FROM MeasDef
 
-JOIN simdata on simdata.BldgType = MeasDef.BldgType and simdata.BldgVint = MeasDef.BldgVint;
+JOIN simdata ON 
+simdata.BldgType = MeasDef.BldgType AND 
+simdata.BldgVint = MeasDef.BldgVint;
 
 
 

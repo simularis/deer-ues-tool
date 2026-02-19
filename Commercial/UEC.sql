@@ -26,6 +26,7 @@ measkWh.Value/measkW.NumUnits AS "MeasUECkWh",
 meastherm.Value/measkW.NumUnits AS "MeasUECtherm"
 
 FROM Permutations
+
 LEFT JOIN simdata prekW on 
   prekW."TechID"   = Permutations."PreTechID" AND
   prekW."BldgType" = Permutations."BldgType" AND
@@ -109,7 +110,7 @@ GROUP BY
  
 ORDER BY 
   Permutations.OfferingID,
+  Permutations.BldgLoc,
   Permutations.BldgType,
   Permutations.BldgHVAC,
-  Permutations.BldgVint,
-  Permutations.BldgLoc;
+  Permutations.BldgVint;
