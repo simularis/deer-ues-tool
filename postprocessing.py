@@ -15,7 +15,8 @@ Update: 11-20-2025
     - updated Res SQLs and applied changes to Com SQLs
 Update: 1-14-2026
     - updated script with terminal user inputs for future UI development
-
+Update: 2-19-2026
+    - removed excess simdata files from being written and simplified normunits function
 '''
 
 import pandas as pd
