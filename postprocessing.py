@@ -24,7 +24,7 @@ import sqlite3
 # Reading in user input values (later develop into UI with gooey)
 print("Enter measure name (SWXX0XX)")
 Measure_name = str(input())
-print("Enter end-use category (HVAC, Lighting, BldgEnv, etc.)")
+print("Enter end-use category (HVAC, HPWH, Lighting, etc.)")
 Use_category = str(input())
 print("Enter sector (Residential, Commercial)")
 Sector = str(input())
@@ -58,16 +58,8 @@ elif Norm_unit == "Area-ft-BA":
     df['NumUnits'] = df['Area/Conditioned Total'] * m2_to_sqft
 
 # maybe have normunits be separate measure-specific input table
-
-df_edited = df.to_csv("simdata_edited.csv", index=False)
-
-# simdata long table format
-df_wide = pd.read_csv("simdata_edited.csv")
-
-df_long = pd.melt(df_wide, id_vars = ["File Name","BldgLoc", "BldgType", "Story", "BldgHVAC" ,
+df_long = pd.melt(df, id_vars = ["File Name","BldgLoc", "BldgType", "Story", "BldgHVAC" ,
                                        "BldgVint", "TechGroup", "TechType", "TechID","NormUnit","NumUnits"], var_name = "Value Name", value_name = "Value")
-
-df_final = df_long.to_csv("simdata_long.csv", index=False)
 
 print("simdata processed")
 
@@ -78,12 +70,10 @@ connection = sqlite3.connect('postprocessing.db')
 cursor = connection.cursor()
 
 # Read in tables and simdata 
-df = pd.read_csv('simdata_long.csv', low_memory=False)
-df.to_sql('simdata', connection, if_exists="replace")
+df_long.to_sql('simdata', connection, if_exists="replace")
 
 df = pd.read_csv(f'MeasDef_{Measure_name}.csv')
 df.to_sql('MeasDef', connection, if_exists="replace")
-# remove building type column from MeasDef, assume building types can be permuted for all offering IDs
 
 df = pd.read_csv('NumStor.csv')
 df.to_sql('NumStor', connection, if_exists="replace")
