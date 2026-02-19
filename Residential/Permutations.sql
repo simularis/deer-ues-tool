@@ -19,7 +19,9 @@ MeasDef.MeasTechID
 
 FROM MeasDef
 
-JOIN simdata_story on simdata_story.BldgHVAC = MeasDef.BldgHVAC and simdata_story.BldgVint = MeasDef.BldgVint;
+JOIN simdata_story ON 
+ simdata_story.BldgHVAC = MeasDef.BldgHVAC AND
+ simdata_story.BldgVint = MeasDef.BldgVint;
 
 
 

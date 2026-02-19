@@ -16,7 +16,7 @@ simdata1.BldgHVAC,
 simdata1.NormUnit,
 simdata1.NumUnits,
 simdata1."Value Name",
-(simdata1."Value" * (2 - numstor) + simdata2."Value" * (numstor - 1))/simdata1.NumUnits AS "Value"
+((simdata1."Value" * (2 - numstor)) + (simdata2."Value" * (numstor - 1)))/simdata1.NumUnits AS "Value"
 
 FROM simdata simdata1
 
@@ -25,7 +25,8 @@ simdata1.TechID = simdata2.TechID AND
 simdata1.BldgLoc = simdata2.BldgLoc AND
 simdata1.BldgType = simdata2.BldgType AND
 simdata1.BldgVint = simdata2.BldgVint AND
-simdata1.BldgHVAC = simdata2.BldgHVAC
+simdata1.BldgHVAC = simdata2.BldgHVAC AND
+simdata1."Value Name" = simdata2."Value Name"
 
 JOIN numstor ON
 numstor.BldgType = simdata1.BldgType AND

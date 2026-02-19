@@ -1,4 +1,4 @@
--- applies com building weights to savings
+-- applies res building weights to savings
 DROP TABLE If EXISTS UES_Wts;
 CREATE TABLE UES_Wts AS
 
@@ -33,13 +33,13 @@ UES.UEStherm_2 * sum_bldg AS "UEStherm_2"
 
 FROM UES
 
-INNER JOIN wts_com_bldg_2026 ON
- wts_com_bldg_2026."bldgtype" = UES."BldgType" AND
- wts_com_bldg_2026."era"      = UES."BldgVint" AND
- wts_com_bldg_2026."bldgloc"  = UES."BldgLoc"
+INNER JOIN wts_res_bldg ON 
+ wts_res_bldg."bldgtype" = UES."BldgType" AND 
+ wts_res_bldg."era"      = UES."BldgVint" AND
+ wts_res_bldg."bldgloc"  = UES."BldgLoc"
 
 ORDER BY 
 UES."OfferingID",
-UES."BldgVint",
 UES."BldgLoc",
+UES."BldgVint",
 UES."BldgHVAC";
