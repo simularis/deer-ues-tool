@@ -2,21 +2,16 @@
 Description: This script will run the SQL files and perform calculations used in the DEER-EnergyPlus Models post-processing steps,
              effectively expediting the SQL and energy savings workbook steps.
 Author: Kelsey Yen, Solaris Technical LLC
-Date: 10-01-2025 
-Update: 10-21-2025
-    - converts simdata from wide to long table
-Update: 11-05-2025
-    - adds calculated columns to simdata input file for SQL queries
-Update: 11-11-2025
-    - adds weighted Com SQL queries
-Update: 11-13-2025
-    - created Res SQLs
-Update: 11-20-2025
-    - updated Res SQLs and applied changes to Com SQLs
-Update: 1-14-2026
-    - updated script with terminal user inputs for future UI development
-Update: 2-19-2026
-    - removed excess simdata files from being written and simplified normunits function
+Date: 10-01-2025
+
+Revision Log:
+10-21-2025 - converts simdata from wide to long table
+11-05-2025 - adds calculated columns to simdata input file for SQL queries
+11-11-2025 - adds weighted Com SQL queries
+11-13-2025 - created Res SQLs
+11-20-2025 - updated Res SQLs and applied changes to Com SQLs
+01-14-2026 - updated script with terminal user inputs for future UI development
+02-19-2026 - removed excess simdata files from being written and simplified normunits function
 '''
 
 import pandas as pd
@@ -32,7 +27,7 @@ Norm_unit = str(input())
 
 print(f"\nPost-Processing Script Inputs:\nMeasure Name: {Measure_name}\nSector: {Sector}\nNormalizing Unit: {Norm_unit}\n")
 
-# Conversions
+# Unit Conversions
 J_to_kW = 1/3600000
 m2_to_sqft = 10.7639
 W_to_tons = 0.0002843451
@@ -69,11 +64,14 @@ cursor = connection.cursor()
 # Read in tables and simdata 
 df_long.to_sql('simdata', connection, if_exists="replace")
 
-df = pd.read_csv(f'MeasDef_{Measure_name}.csv')
-df.to_sql('MeasDef', connection, if_exists="replace")
+df_measdef = pd.read_csv(f'MeasDef_{Measure_name}.csv')
+df_measdef.to_sql('MeasDef', connection, if_exists="replace")
 
-df = pd.read_csv('NumStor.csv')
-df.to_sql('NumStor', connection, if_exists="replace")
+df_numstor = pd.read_csv('NumStor.csv')
+df_numstor.to_sql('NumStor', connection, if_exists="replace")
+
+df_normunits = pd.read_excel('NormUnits.xlsx')
+df_normunits.to_sql('NormUnits', connection, if_exists="replace")
 
 # Read the SQL script from a file 
 if Sector == "Residential":

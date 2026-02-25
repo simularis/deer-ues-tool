@@ -1,0 +1,143 @@
+BldgType,BldgLoc,BldgVint,NormUnit,Value,Measure
+DMo,Any,Any,Area-ft2-BA,2480,
+DMo,Any,Any,Area-ft2,2174.56,Wall Insulation
+DMo,Any,Any,Area-ft2,2480,Ceiling Insulation
+DMo,Any,Any,kWhreduced,800,Refrigerator/Freezer
+Asm,Any,Any,Area-ft2-BA,100002.1,
+ECC,Any,Any,Area-ft2-BA,299999.6,
+EPr,Any,Any,Area-ft2-BA,50000.14,
+ERC,Any,Any,Area-ft2-BA,1920.017,
+ESe,Any,Any,Area-ft2-BA,149998.6,
+EUn,Any,Any,Area-ft2-BA,930201.4,
+Hsp,Any,Any,Area-ft2-BA,235501,
+Htl,Any,Any,Area-ft2-BA,139998.9,
+MBT,Any,Any,Area-ft2-BA,199999.2,
+MLI,Any,Any,Area-ft2-BA,100001.1,
+Mtl,Any,Any,Area-ft2-BA,30000.07,
+Nrs,Any,Any,Area-ft2-BA,60654.58,
+OfL,Any,Any,Area-ft2-BA,174998.9,
+OfS,Any,Any,Area-ft2-BA,10000.08,
+RFF,Any,Any,Area-ft2-BA,2500.053,
+RSD,Any,Any,Area-ft2-BA,5599.957,
+Rt3,Any,Any,Area-ft2-BA,120000.5,
+RtL,Any,Any,Area-ft2-BA,129997,
+RtS,Any,Any,Area-ft2-BA,7999.929,
+SCn,Any,Any,Area-ft2-BA,250000.3,
+MFm,Any,Any,Area-ft2-BA,24580,
+MFm,Any,Any,Area-ft2,5747.061,Wall Insulation
+MFm,Any,Any,Area-ft2,24580,Ceiling Insulation
+MFm,CZ01,Ex,Cap-Tons,19.45,PTAC / PTHP
+MFm,CZ02,Ex,Cap-Tons,22.32,PTAC / PTHP
+MFm,CZ03,Ex,Cap-Tons,24.49,PTAC / PTHP
+MFm,CZ04,Ex,Cap-Tons,23.49,PTAC / PTHP
+MFm,CZ05,Ex,Cap-Tons,23.88,PTAC / PTHP
+MFm,CZ06,Ex,Cap-Tons,23.79,PTAC / PTHP
+MFm,CZ07,Ex,Cap-Tons,22.48,PTAC / PTHP
+MFm,CZ08,Ex,Cap-Tons,27.59,PTAC / PTHP
+MFm,CZ09,Ex,Cap-Tons,35.33,PTAC / PTHP
+MFm,CZ10,Ex,Cap-Tons,31.18,PTAC / PTHP
+MFm,CZ11,Ex,Cap-Tons,36.97,PTAC / PTHP
+MFm,CZ12,Ex,Cap-Tons,29.91,PTAC / PTHP
+MFm,CZ13,Ex,Cap-Tons,44.48,PTAC / PTHP
+MFm,CZ14,Ex,Cap-Tons,36.1,PTAC / PTHP
+MFm,CZ15,Ex,Cap-Tons,46.7,PTAC / PTHP
+MFm,CZ16,Ex,Cap-Tons,37.62,PTAC / PTHP
+MFm,CZ01,New,Cap-Tons,19.43,PTAC / PTHP
+MFm,CZ02,New,Cap-Tons,13.44,PTAC / PTHP
+MFm,CZ03,New,Cap-Tons,22.69,PTAC / PTHP
+MFm,CZ04,New,Cap-Tons,13.62,PTAC / PTHP
+MFm,CZ05,New,Cap-Tons,20.22,PTAC / PTHP
+MFm,CZ06,New,Cap-Tons,13.48,PTAC / PTHP
+MFm,CZ07,New,Cap-Tons,15.22,PTAC / PTHP
+MFm,CZ08,New,Cap-Tons,15.68,PTAC / PTHP
+MFm,CZ09,New,Cap-Tons,18.98,PTAC / PTHP
+MFm,CZ10,New,Cap-Tons,17.15,PTAC / PTHP
+MFm,CZ11,New,Cap-Tons,22.04,PTAC / PTHP
+MFm,CZ12,New,Cap-Tons,16.99,PTAC / PTHP
+MFm,CZ13,New,Cap-Tons,24.01,PTAC / PTHP
+MFm,CZ14,New,Cap-Tons,18.54,PTAC / PTHP
+MFm,CZ15,New,Cap-Tons,31.11,PTAC / PTHP
+MFm,CZ16,New,Cap-Tons,32.06,PTAC / PTHP
+MFm,Any,Any,kWhreduced,9600,Refrigerator/Freezer
+SFm,CZ01,Any,Area-ft2-BA,4320,
+SFm,CZ02,Any,Area-ft2-BA,4320,
+SFm,CZ03,Any,Area-ft2-BA,4320,
+SFm,CZ04,Any,Area-ft2-BA,4320,
+SFm,CZ05,Any,Area-ft2-BA,4320,
+SFm,CZ06,Any,Area-ft2-BA,4500,
+SFm,CZ07,Any,Area-ft2-BA,4500,
+SFm,CZ08,Any,Area-ft2-BA,4500,
+SFm,CZ09,Any,Area-ft2-BA,3850,
+SFm,CZ10,Any,Area-ft2-BA,4140,
+SFm,CZ11,Any,Area-ft2-BA,3570,
+SFm,CZ12,Any,Area-ft2-BA,3570,
+SFm,CZ13,Any,Area-ft2-BA,3570,
+SFm,CZ14,Any,Area-ft2-BA,3250,
+SFm,CZ15,Any,Area-ft2-BA,3250,
+SFm,CZ16,Any,Area-ft2-BA,3800,
+SFm,CZ01,Any,Area-ft2,2884,Wall Insulation
+SFm,CZ02,Any,Area-ft2,2884,Wall Insulation
+SFm,CZ03,Any,Area-ft2,2884,Wall Insulation
+SFm,CZ04,Any,Area-ft2,2884,Wall Insulation
+SFm,CZ05,Any,Area-ft2,2884,Wall Insulation
+SFm,CZ06,Any,Area-ft2,3060,Wall Insulation
+SFm,CZ07,Any,Area-ft2,3060,Wall Insulation
+SFm,CZ08,Any,Area-ft2,3060,Wall Insulation
+SFm,CZ09,Any,Area-ft2,2454,Wall Insulation
+SFm,CZ10,Any,Area-ft2,2718,Wall Insulation
+SFm,CZ11,Any,Area-ft2,2194,Wall Insulation
+SFm,CZ12,Any,Area-ft2,2194,Wall Insulation
+SFm,CZ13,Any,Area-ft2,2194,Wall Insulation
+SFm,CZ14,Any,Area-ft2,1893,Wall Insulation
+SFm,CZ15,Any,Area-ft2,1893,Wall Insulation
+SFm,CZ16,Any,Area-ft2,2403,Wall Insulation
+SFm,CZ01,Any,Area-ft2,2910,Ceiling Insulation
+SFm,CZ02,Any,Area-ft2,2910,Ceiling Insulation
+SFm,CZ03,Any,Area-ft2,2910,Ceiling Insulation
+SFm,CZ04,Any,Area-ft2,2910,Ceiling Insulation
+SFm,CZ05,Any,Area-ft2,2910,Ceiling Insulation
+SFm,CZ06,Any,Area-ft2,2910,Ceiling Insulation
+SFm,CZ07,Any,Area-ft2,2910,Ceiling Insulation
+SFm,CZ08,Any,Area-ft2,2910,Ceiling Insulation
+SFm,CZ09,Any,Area-ft2,2910,Ceiling Insulation
+SFm,CZ10,Any,Area-ft2,2910,Ceiling Insulation
+SFm,CZ11,Any,Area-ft2,2910,Ceiling Insulation
+SFm,CZ12,Any,Area-ft2,2910,Ceiling Insulation
+SFm,CZ13,Any,Area-ft2,2910,Ceiling Insulation
+SFm,CZ14,Any,Area-ft2,2910,Ceiling Insulation
+SFm,CZ15,Any,Area-ft2,2910,Ceiling Insulation
+SFm,CZ16,Any,Area-ft2,2910,Ceiling Insulation
+SFm,CZ01,Ex,Cap-Tons,3.4,PTAC / PTHP
+SFm,CZ02,Ex,Cap-Tons,6.3,PTAC / PTHP
+SFm,CZ03,Ex,Cap-Tons,6.8,PTAC / PTHP
+SFm,CZ04,Ex,Cap-Tons,6.2,PTAC / PTHP
+SFm,CZ05,Ex,Cap-Tons,7.1,PTAC / PTHP
+SFm,CZ06,Ex,Cap-Tons,6.1,PTAC / PTHP
+SFm,CZ07,Ex,Cap-Tons,6.3,PTAC / PTHP
+SFm,CZ08,Ex,Cap-Tons,6.6,PTAC / PTHP
+SFm,CZ09,Ex,Cap-Tons,8.5,PTAC / PTHP
+SFm,CZ10,Ex,Cap-Tons,4.6,PTAC / PTHP
+SFm,CZ11,Ex,Cap-Tons,4.1,PTAC / PTHP
+SFm,CZ12,Ex,Cap-Tons,4.1,PTAC / PTHP
+SFm,CZ13,Ex,Cap-Tons,4.5,PTAC / PTHP
+SFm,CZ14,Ex,Cap-Tons,3.5,PTAC / PTHP
+SFm,CZ15,Ex,Cap-Tons,4.5,PTAC / PTHP
+SFm,CZ16,Ex,Cap-Tons,4.3,PTAC / PTHP
+SFm,CZ01,New,Cap-Tons,1.7,PTAC / PTHP
+SFm,CZ02,New,Cap-Tons,1.6,PTAC / PTHP
+SFm,CZ03,New,Cap-Tons,2.8,PTAC / PTHP
+SFm,CZ04,New,Cap-Tons,1.8,PTAC / PTHP
+SFm,CZ05,New,Cap-Tons,2.8,PTAC / PTHP
+SFm,CZ06,New,Cap-Tons,2.3,PTAC / PTHP
+SFm,CZ07,New,Cap-Tons,2.9,PTAC / PTHP
+SFm,CZ08,New,Cap-Tons,2.8,PTAC / PTHP
+SFm,CZ09,New,Cap-Tons,3.4,PTAC / PTHP
+SFm,CZ10,New,Cap-Tons,2.1,PTAC / PTHP
+SFm,CZ11,New,Cap-Tons,2.4,PTAC / PTHP
+SFm,CZ12,New,Cap-Tons,2.3,PTAC / PTHP
+SFm,CZ13,New,Cap-Tons,2.5,PTAC / PTHP
+SFm,CZ14,New,Cap-Tons,1.7,PTAC / PTHP
+SFm,CZ15,New,Cap-Tons,2.6,PTAC / PTHP
+SFm,CZ16,New,Cap-Tons,3.4,PTAC / PTHP
+SFm,Any,Any,Household,2,Whole House Fan
+SFm,Any,Any,kWhreduced,800,Refrigerator/Freezer
