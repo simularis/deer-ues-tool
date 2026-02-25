@@ -12,11 +12,6 @@ from tqdm import tqdm
 import sys
 import time
 
-def bold_text(text):
-    bold_start = '\033[1m'
-    bold_end = '\033[0m'
-    return bold_start + text + bold_end
-
 @Gooey()
 
 def main():
@@ -45,15 +40,7 @@ def main():
         widget='Dropdown',
         help='Select sector.'
     )
-    
-    #Use Category: dropdown list
-    input.add_argument(
-        '--UseCategory',
-        choices=['HVAC', 'Lighting', 'Service'],
-        widget='Dropdown',
-        help='Select normalizing unit.'
-    )
-    
+       
     #Normalizing Unit: dropdown list
     input.add_argument(
         '--NormalizingUnit',
@@ -78,7 +65,7 @@ def main():
 
     #output submitted information to user
     args = parser.parse_args()
-    print(f'Measure Name: {args.MeasureName}\nSector: {args.Sector}\nUse Category: {args.UseCategory}\nNormalizing Unit: {args.NormalizingUnit}\nSimdata File: {args.SimdataFile}\nMeasDef File: {args.MeasDefFile}')
+    print(f'Measure Name: {args.MeasureName}\nSector: {args.Sector}\nNormalizing Unit: {args.NormalizingUnit}\nSimdata File: {args.SimdataFile}\nMeasDef File: {args.MeasDefFile}')
 
 if __name__ == '__main__':
     main()
