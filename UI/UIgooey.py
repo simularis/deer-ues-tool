@@ -16,7 +16,7 @@ import time
 
 def main():
     #header and description under name of script
-    parser = GooeyParser(description='Post-processing results for DEER-EnergyPlus models.')
+    parser = GooeyParser(description='Post-processing for DEER-EnergyPlus models.')
 
     #subheader with input fields
     input = parser.add_argument_group(
