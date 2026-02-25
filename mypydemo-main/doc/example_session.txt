@@ -1,0 +1,14 @@
+
+
+
+(base) C:\Users\simularis>cd repos\mypydemo
+
+(base) C:\Users\simularis\repos\mypydemo>conda activate mypydemo
+
+(mypydemo) C:\Users\simularis\repos\mypydemo>python myscript.py add_numbers 1 2
+1.0 + 2.0 = 3.0
+
+(mypydemo) C:\Users\simularis\repos\mypydemo>
+
+
+
