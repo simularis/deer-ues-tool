@@ -75,8 +75,8 @@ df_normunits.to_sql('NormUnits', connection, if_exists="replace")
 
 # Read the SQL script from a file 
 if Sector == "Residential":
-    df = pd.read_csv('wts_res_bldg.csv')
-    df.to_sql('wts_res_bldg', connection, if_exists="replace")
+    df_res = pd.read_csv(f'{Sector}/wts_res_bldg.csv')
+    df_res.to_sql('wts_res_bldg', connection, if_exists="replace")
 
     try: 
         with open(f'{Sector}/Story_Wts.sql', 'r') as file: 
@@ -113,8 +113,8 @@ if Sector == "Residential":
         print(f"An error occurred: {e}")
 
 elif Sector == "Commercial":
-    df = pd.read_csv('wts_com_bldg_2026.csv')
-    df.to_sql('wts_com_bldg_2026', connection, if_exists="replace")
+    df_com = pd.read_csv(f'{Sector}/wts_com_bldg_2026.csv')
+    df_com.to_sql('wts_com_bldg_2026', connection, if_exists="replace")
 
     try:     
         with open(f'{Sector}/Permutations.sql', 'r') as file: 
@@ -146,8 +146,8 @@ elif Sector == "Commercial":
         print(f"An error occurred: {e}")
 
 # Output results as csv
-df = pd.read_sql_query(f"SELECT * FROM {'UES'}", connection)
-df.to_csv(f'energysavings_{Measure_name}.csv', index=False)
+df_output = pd.read_sql_query(f"SELECT * FROM {'UES'}", connection)
+df_output.to_csv(f'energysavings_{Measure_name}.csv', index=False)
 print(f"Savings calcs completed for {Measure_name}.")
 
 # Commit changes and close the connection 
