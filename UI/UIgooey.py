@@ -1,6 +1,5 @@
 '''
-Description: This script will run the SQL files and perform calculations used in the DEER-EnergyPlus Models post-processing steps,
-             effectively expediting the SQL and energy savings workbook steps.
+Description: This script will run a Gooey-based user interface.
 Author: Kelsey Yen, Solaris Technical LLC
 Date: 1-15-2026
 
