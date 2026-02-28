@@ -21,11 +21,11 @@ import sqlite3
 # Reading in user input values (later develop into UI with gooey)
 print("Enter measure name (SWXX0XX)")
 Measure_name = str(input())
-print("Enter measure type (HVAC, Wall Insulation, Ceiling Insulation, Refrigerator/Freezer, PTAC/HP, Whole House Fan)")
+print("Enter measure type/use (Cooling Capacity, Wall Insulation, Ceiling Insulation, Refrigerator/Freezer, PTAC/PTHP, Whole House Fan)")
 Measure_type = str(input())
 print("Enter sector (Residential, Commercial)")
 Sector = str(input())
-print("Enter normalizing unit (Cap-Tons, Area-ft2-BA, Area-ft2, kWh-Reduced, Household)")
+print("Enter normalizing unit (Cap-Tons, Area-ft2-BA, Area-ft2, kWhreduced, Household)")
 Norm_unit = str(input())
 
 # Unit Conversions
@@ -90,7 +90,19 @@ if Sector == "Residential":
     df_res = pd.read_csv('LookupTables/wts_res_bldg.csv')
     df_res.to_sql('wts_res_bldg', connection, if_exists="replace")
 
-    try: 
+    try:
+        # Condition for using Norm unit lookup table
+        if Measure_type == "Wall Insulation" or Measure_type == "Ceiling Insulation" or Measure_type == "Refrigerator/Freezer" or Measure_type == "PTAC/PTHP" or Measure_type == "WholeHouseFan":
+            with open(f'{Sector}/NormUnitLookup.sql', 'r') as file: 
+                sql_script = file.read()
+            cursor.executescript(sql_script)
+            print("Norm units lookup script executed successfully.")
+        else: 
+            with open(f'{Sector}/NormUnit.sql', 'r') as file: 
+                sql_script = file.read()
+            cursor.executescript(sql_script)
+            print("Norm units script executed successfully.")
+            
         with open(f'{Sector}/Story_Wts.sql', 'r') as file: 
             sql_script = file.read()
         cursor.executescript(sql_script)
@@ -133,18 +145,18 @@ elif Sector == "Commercial":
             sql_script = file.read()
         cursor.executescript(sql_script)
         print("Permutations script executed successfully.")
-
+        # Condition for using Norm unit lookup table
         if Norm_unit == "Area-ft2-BA":
             with open(f'{Sector}/NormUnitLookUp.sql', 'r') as file: 
                 sql_script = file.read()
             cursor.executescript(sql_script)
-            print("Norm units script executed successfully.")
+            print("Norm units lookup script executed successfully.")
         else: 
             with open(f'{Sector}/NormUnit.sql', 'r') as file: 
                 sql_script = file.read()
             cursor.executescript(sql_script)
             print("Norm units script executed successfully.")
-            
+
         with open(f'{Sector}/UEC.sql', 'r') as file: 
             sql_script = file.read()
         cursor.executescript(sql_script)
