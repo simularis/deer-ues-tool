@@ -1,57 +1,54 @@
-/*
-This creates the table Story_Wts, residential building considerations for stories.
-Run prior to Permutations to join simdata 1 and 2 story rows together.
-*/
+-- applies residential story weights
 DROP TABLE IF EXISTS simdata_story;
 CREATE TABLE simdata_story AS
 
--- for SFm
+-- SFm
 SELECT
-simdata1.TechID,
-simdata1.BldgLoc,
-simdata1.BldgType,
-simdata1.BldgVint,
-simdata1.BldgHVAC,
-0 AS Story,
-simdata1.NormUnit,
-simdata1.NumUnits,
-simdata1."Value Name",
-((simdata1."Value" * (2 - numstor)) + (simdata2."Value" * (numstor - 1)))/simdata1.NumUnits AS "Value"
+  normunits_simdata1.TechID,
+  normunits_simdata1.BldgLoc,
+  normunits_simdata1.BldgType,
+  normunits_simdata1.BldgVint,
+  normunits_simdata1.BldgHVAC,
+  0 AS Story,
+  normunits_simdata1.NormUnit,
+  normunits_simdata1.NumUnits,
+  normunits_simdata1."Value Name",
+  ((normunits_simdata1."Value" * (2 - numstor)) + (normunits_simdata2."Value" * (numstor - 1))) / normunits_simdata1.NumUnits AS "Value"
 
-FROM simdata simdata1
+FROM normunits_simdata normunits_simdata1
 
-JOIN simdata simdata2 ON 
-simdata1.TechID = simdata2.TechID AND
-simdata1.BldgLoc = simdata2.BldgLoc AND
-simdata1.BldgType = simdata2.BldgType AND
-simdata1.BldgVint = simdata2.BldgVint AND
-simdata1.BldgHVAC = simdata2.BldgHVAC AND
-simdata1."Value Name" = simdata2."Value Name"
+JOIN normunits_simdata normunits_simdata2 ON 
+  normunits_simdata1.TechID       = normunits_simdata2.TechID   AND
+  normunits_simdata1.BldgLoc      = normunits_simdata2.BldgLoc  AND
+  normunits_simdata1.BldgType     = normunits_simdata2.BldgType AND
+  normunits_simdata1.BldgVint     = normunits_simdata2.BldgVint AND
+  normunits_simdata1.BldgHVAC     = normunits_simdata2.BldgHVAC AND
+  normunits_simdata1."Value Name" = normunits_simdata2."Value Name"
 
 JOIN numstor ON
-numstor.BldgType = simdata1.BldgType AND
-numstor.VintYear = simdata1.BldgVint AND
-numstor.BldgLoc = simdata1.BldgLoc
+  numstor.BldgType = normunits_simdata1.BldgType AND
+  numstor.VintYear = normunits_simdata1.BldgVint AND
+  numstor.BldgLoc  = normunits_simdata1.BldgLoc
 
-WHERE simdata1.Story = 1 and simdata2.Story = 2
+WHERE normunits_simdata1.Story = 1 AND normunits_simdata2.Story = 2
 
 UNION
 
--- for DMo and MFm
+-- DMo and MFm
 
 SELECT
-simdata.TechID,
-simdata.BldgLoc,
-simdata.BldgType,
-simdata.BldgVint,
-simdata.BldgHVAC,
-simdata.Story,
-simdata.NormUnit,
-simdata.NumUnits,
-simdata."Value Name",
-simdata."Value"/simdata.NumUnits AS "Value"
+  normunits_simdata.TechID,
+  normunits_simdata.BldgLoc,
+  normunits_simdata.BldgType,
+  normunits_simdata.BldgVint,
+  normunits_simdata.BldgHVAC,
+  normunits_simdata.Story,
+  normunits_simdata.NormUnit,
+  normunits_simdata.NumUnits,
+  normunits_simdata."Value Name",
+  normunits_simdata."Value" / normunits_simdata.NumUnits AS "Value"
 
-FROM simdata
+FROM normunits_simdata
 
-WHERE simdata.Story = 0;
+WHERE normunits_simdata.Story = 0;
 

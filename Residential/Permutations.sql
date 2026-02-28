@@ -1,27 +1,24 @@
-/*
-This creates the table Permutations, which is based on the available offering IDs. 
-*/
-
+-- creates permutations based on the available offering IDs
 DROP TABLE IF EXISTS Permutations;
 CREATE TABLE Permutations AS 
 
 SELECT DISTINCT
-MeasDef.OfferingID,
-MeasDef.MAT,
-simdata_story.BldgLoc,
-simdata_story.BldgType,
-simdata_story.BldgVint,
-simdata_story.BldgHVAC,
-simdata_story.Story,
-MeasDef.PreTechID,
-MeasDef.StdTechID,
-MeasDef.MeasTechID
+  MeasDef.OfferingID,
+  MeasDef.MAT,
+  simdata_story.BldgLoc,
+  simdata_story.BldgType,
+  simdata_story.BldgVint,
+  simdata_story.BldgHVAC,
+  simdata_story.Story,
+  MeasDef.PreTechID,
+  MeasDef.StdTechID,
+  MeasDef.MeasTechID
 
 FROM MeasDef
 
 JOIN simdata_story ON 
- simdata_story.BldgHVAC = MeasDef.BldgHVAC AND
- simdata_story.BldgVint = MeasDef.BldgVint;
+  simdata_story.BldgHVAC = MeasDef.BldgHVAC AND
+  simdata_story.BldgVint = MeasDef.BldgVint;
 
 
 

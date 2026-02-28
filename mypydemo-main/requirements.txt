@@ -1,4 +1,0 @@
-gooey
-tqdm
-pyinstaller
-pandoc # for documentation only. Get the conda package or install from web. Don't get the pypi package.

@@ -1,45 +1,45 @@
 -- applies res building weights to savings
-DROP TABLE If EXISTS UES_Wts;
+DROP TABLE IF EXISTS UES_Wts;
 CREATE TABLE UES_Wts AS
 
 SELECT
-UES.OfferingID,
-UES.MAT,
-UES.BldgLoc,
-UES.BldgType,
-UES.BldgVint,
-UES.BldgHVAC,
-UES.PreTechID,
-UES.StdTechID,
-UES.MeasTechID,
-sum_bldg AS "wt_bldg",
-UES.NormUnit,
-UES.NumUnits * sum_bldg AS "NumUnits",
-UES.PreUECkW * sum_bldg AS "PreUECkW",
-UES.PreUECkWh * sum_bldg AS "PreUECkWh",
-UES.PreUECtherm * sum_bldg AS "PreUECtherm",
-UES.StdUECkW * sum_bldg AS "StdUECkW",
-UES.StdUECkWh * sum_bldg AS "StdUECkWh",
-UES.StdUECtherm * sum_bldg AS "StdUECtherm",
-UES.MeasUECkW * sum_bldg AS "MeasUECkW",
-UES.MeasUECkWh * sum_bldg AS "MeasUECkWh",
-UES.MeasUECtherm * sum_bldg AS "MeasUECtherm",
-UES.UESkW_1 * sum_bldg AS "UESkW_1",
-UES.UESkWh_1 * sum_bldg AS "UESkWh_1",
-UES.UEStherm_1 * sum_bldg AS "UEStherm_1",
-UES.UESkW_2 * sum_bldg AS "UESkW_2",
-UES.UESkWh_2 * sum_bldg AS "UESkWh_2",
-UES.UEStherm_2 * sum_bldg AS "UEStherm_2"
+  UES.OfferingID,
+  UES.MAT,
+  UES.BldgLoc,
+  UES.BldgType,
+  UES.BldgVint,
+  UES.BldgHVAC,
+  UES.PreTechID,
+  UES.StdTechID,
+  UES.MeasTechID,
+  sum_bldg AS "wt_bldg",
+  UES.NormUnit,
+  UES.NumUnits     * sum_bldg AS "NumUnits",
+  UES.PreUECkW     * sum_bldg AS "PreUECkW",
+  UES.PreUECkWh    * sum_bldg AS "PreUECkWh",
+  UES.PreUECtherm  * sum_bldg AS "PreUECtherm",
+  UES.StdUECkW     * sum_bldg AS "StdUECkW",
+  UES.StdUECkWh    * sum_bldg AS "StdUECkWh",
+  UES.StdUECtherm  * sum_bldg AS "StdUECtherm",
+  UES.MeasUECkW    * sum_bldg AS "MeasUECkW",
+  UES.MeasUECkWh   * sum_bldg AS "MeasUECkWh",
+  UES.MeasUECtherm * sum_bldg AS "MeasUECtherm",
+  UES.UESkW_1      * sum_bldg AS "UESkW_1",
+  UES.UESkWh_1     * sum_bldg AS "UESkWh_1",
+  UES.UEStherm_1   * sum_bldg AS "UEStherm_1",
+  UES.UESkW_2      * sum_bldg AS "UESkW_2",
+  UES.UESkWh_2     * sum_bldg AS "UESkWh_2",
+  UES.UEStherm_2   * sum_bldg AS "UEStherm_2"
 
 FROM UES
 
 INNER JOIN wts_res_bldg ON 
- wts_res_bldg."bldgtype" = UES."BldgType" AND 
- wts_res_bldg."era"      = UES."BldgVint" AND
- wts_res_bldg."bldgloc"  = UES."BldgLoc"
+  wts_res_bldg."bldgtype" = UES."BldgType" AND 
+  wts_res_bldg."era"      = UES."BldgVint" AND
+  wts_res_bldg."bldgloc"  = UES."BldgLoc"
 
 ORDER BY 
-UES."OfferingID",
-UES."BldgLoc",
-UES."BldgVint",
-UES."BldgHVAC";
+  UES."OfferingID",
+  UES."BldgLoc",
+  UES."BldgVint",
+  UES."BldgHVAC";
