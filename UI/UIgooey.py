@@ -1,12 +1,13 @@
 '''
-Description: This script will run the SQL files and perform calculations used in the DEER-EnergyPlus Models post-processing steps,
-             effectively expediting the SQL and energy savings workbook steps.
+Description: This script will run a Gooey-based user interface.
 Author: Kelsey Yen, Solaris Technical LLC
 Date: 1-15-2026
 
 Revision log:
 02-16-2026 - Updated UI with more user inputs
 02-27-2026 - Revised user inputs to match updated norm unit query requirements
+
+- run Gooey to run postprocessing.py with user inputs as variables.
 '''
 
 from argparse import ArgumentParser
