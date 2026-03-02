@@ -32,7 +32,7 @@ def main():
     input.add_argument(
         '--MeasureName', 
         widget='TextField',
-        help='Enter measure name in SWXX0XX format.'
+        help='Enter measure name in SWXX0XX format'
     )
 
     # Measure Type: dropdown list
@@ -40,7 +40,7 @@ def main():
         '--MeasureType',
         choices=['Cooling Capacity', 'PTAC/PTHP', 'Ceiling Insulation', 'Wall Insulation','Refrigerator/Freezer', 'Whole House Fan'],
         widget='Dropdown',
-        help='Select measure type/end-use.'
+        help='Select measure type/end-use'
     )
 
     # Sector: dropdown list
@@ -48,7 +48,7 @@ def main():
         '--Sector',
         choices=['Residential', 'Commercial'],
         widget='Dropdown',
-        help='Select sector.'
+        help='Select sector'
     )
        
     #Normalizing Unit: dropdown list
@@ -56,21 +56,21 @@ def main():
         '--NormalizingUnit',
         choices=['Cap-Tons', 'Area-ft2-BA', 'Area-ft2', 'Household', 'kWhreduced'],
         widget='Dropdown',
-        help='Select normalizing unit.'
+        help='Select normalizing unit'
         )
 
     #Simdata File: File chooser
     input.add_argument(
         '--SimdataFile',
         widget="FileChooser",
-        help="Select simdata file."
+        help="Select simdata file"
     )
     
     #MeasDef File: File chooser
     input.add_argument(
         '--MeasDefFile',
         widget="FileChooser",
-        help="Select MeasDef file."
+        help="Select MeasDef file"
     )
 
     #output submitted information to user
