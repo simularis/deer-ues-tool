@@ -2,29 +2,23 @@
 Description: This script will run a Gooey-based user interface.
 Author: Kelsey Yen, Solaris Technical LLC
 Date: 1-15-2026
-
+'''
+'''
 Revision log:
 02-16-2026 - Updated UI with more user inputs
 02-27-2026 - Revised user inputs to match updated norm unit query requirements
-
-- run Gooey to run postprocessing.py with user inputs as variables.
+03-02-3036 - Revised UI to run postprocessing.py with user inputs from Gooey
 '''
 
-from argparse import ArgumentParser
-from time import sleep
-from pathlib import Path
-from hashlib import sha256
-from zipfile import ZipFile
 from gooey import Gooey, GooeyParser
-from tqdm import tqdm
-import sys
-import time
+from postprocessing import postprocessing
 
-@Gooey()
+@Gooey(program_name = 'Post-Processing'   
+)
 
 def main():
     #header and description under name of script
-    parser = GooeyParser(description='Post-processing for DEER-EnergyPlus models.')
+    parser = GooeyParser(description='Run post-processing for DEER-EnergyPlus models and generate savings.')
 
     # subheader with input fields
     input = parser.add_argument_group(
@@ -35,14 +29,14 @@ def main():
     )
 
     # Measure Name: text field
-    Measure_name = input.add_argument(
+    input.add_argument(
         '--MeasureName', 
         widget='TextField',
         help='Enter measure name in SWXX0XX format.'
     )
 
     # Measure Type: dropdown list
-    Measure_type = input.add_argument(
+    input.add_argument(
         '--MeasureType',
         choices=['Cooling Capacity', 'PTAC/PTHP', 'Ceiling Insulation', 'Wall Insulation','Refrigerator/Freezer', 'Whole House Fan'],
         widget='Dropdown',
@@ -50,7 +44,7 @@ def main():
     )
 
     # Sector: dropdown list
-    Sector = input.add_argument(
+    input.add_argument(
         '--Sector',
         choices=['Residential', 'Commercial'],
         widget='Dropdown',
@@ -58,7 +52,7 @@ def main():
     )
        
     #Normalizing Unit: dropdown list
-    Norm_unit = input.add_argument(
+    input.add_argument(
         '--NormalizingUnit',
         choices=['Cap-Tons', 'Area-ft2-BA', 'Area-ft2', 'Household', 'kWhreduced'],
         widget='Dropdown',
@@ -66,14 +60,14 @@ def main():
         )
 
     #Simdata File: File chooser
-    Simdata_file = input.add_argument(
+    input.add_argument(
         '--SimdataFile',
         widget="FileChooser",
         help="Select simdata file."
     )
     
     #MeasDef File: File chooser
-    MeasDef_file = input.add_argument(
+    input.add_argument(
         '--MeasDefFile',
         widget="FileChooser",
         help="Select MeasDef file."
@@ -81,7 +75,9 @@ def main():
 
     #output submitted information to user
     args = parser.parse_args()
-    print(f'Measure Name: {Measure_name}\nMeasure Type: {Measure_type}\nSector: {Sector}\nNormalizing Unit: {Norm_unit}\nSimdata File: {Simdata_file}\nMeasDef File: {MeasDef_file}')
+    print(f'User Inputs\nMeasure Name: {args.MeasureName}\nMeasure Type: {args.MeasureType}\nSector: {args.Sector}\nNormalizing Unit: {args.NormalizingUnit}\nSimdata File: {args.SimdataFile}\nMeasDef File: {args.MeasDefFile}\n')
+
+    postprocessing(args.MeasureName, args.MeasureType, args.Sector, args.NormalizingUnit, args.SimdataFile, args.MeasDefFile)
 
 if __name__ == '__main__':
     main()
