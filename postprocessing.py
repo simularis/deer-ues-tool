@@ -28,10 +28,11 @@ def postprocessing(Measure_name, Measure_type, Sector, Norm_unit, Simdata_file, 
 
     # Edit simdata for measure specific calcs
     df = pd.read_csv(Simdata_file)
-
+    # Convert electricity usage to kW
     df['Demand kW'] = df['Electricity:Facility [J](Hourly)'] * J_to_kW
-
+    # Convert HVAC electricity usage to kWh
     df['HVAC kWh'] = df['Electricity/Heating'] + df['Electricity/Cooling'] + df['Electricity/Fans']
+    # Convert HVAC gas usage to therms
     df['HVAC therm'] = (df['Natural Gas/Heating'] + df['Natural Gas/Cooling'] + df['Natural Gas/Fans']) * kWh_to_therms
 
     # Assign user selected norm unit name
