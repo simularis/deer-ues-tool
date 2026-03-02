@@ -17,4 +17,11 @@ The tool also requires the following manually inputs as seen in the graphic user
 2. Measure Type: The type of measure being processed based on the measure end-use. The dropdown options are Cooling Capacity, PTAC/PTHP, Ceiling Insulation, Wall Insulation, Refrigerator/Freezer, and Whole House Fan.
 3. Sector: The measure pacakge sector. Dropdown options are Residential and Commercial.
 4. Normalizing Unit: The normalizing unit which will be used to normalize the measure savings. Dropdown options are Cap-Tons, Area-ft2-BA, Area-ft2, Household, kWhreduced.
-(https://github.com/simularis/deer-ues-tool/blob/main/UI/gooey_1.png)
+
+![](https://github.com/simularis/deer-ues-tool/blob/main/UI/gooey_1.jpg)
+
+![](https://github.com/simularis/deer-ues-tool/blob/main/UI/gooey_2.jpg)
+
+![](https://github.com/simularis/deer-ues-tool/blob/main/UI/gooey_3.jpg)
+
+![](https://github.com/simularis/deer-ues-tool/blob/main/UI/gooey_4.jpg)
