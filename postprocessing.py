@@ -45,8 +45,6 @@ def postprocessing(Measure_name, Measure_type, Sector, Norm_unit, Simdata_file, 
 
     print("simdata processed")
 
-    df_long.to_csv(f'simdata_processed_{Measure_name}.csv', index=False)
-
     # Connect to the database (or create it if it doesn't exist) 
     connection = sqlite3.connect('postprocessing.db')
 
