@@ -12,7 +12,7 @@ This tool is a package which contains a simple graphic user interface, Python sc
 ## Instructions
 To run the tool, download the GitHub repository and collect the necessary inputs information andfiles as stated below.
 
-Additionally, Python or Anaconda (a Python distribution platform) must be installed to run the tool.
+Additionally, Python or Anaconda must be installed to run the tool script.
 
 ### Tool Inputs
 This image of the user interface shows the required information and files necessary to use the post-processing tool.
