@@ -73,11 +73,18 @@ def main():
         help="Select MeasDef file"
     )
 
+    input.add_argument(
+        '--ComResOption',
+        widget='CheckBox',
+        action='store_true',
+        help="Include energy savings for Com/Res building type"
+    )
+
     #output submitted information to user
     args = parser.parse_args()
-    print(f'User Inputs\nMeasure Name: {args.MeasureName}\nMeasure Type: {args.MeasureType}\nSector: {args.Sector}\nNormalizing Unit: {args.NormalizingUnit}\nSimdata File: {args.SimdataFile}\nMeasDef File: {args.MeasDefFile}\n')
+    print(f'User Inputs\nMeasure Name: {args.MeasureName}\nMeasure Type: {args.MeasureType}\nSector: {args.Sector}\nNormalizing Unit: {args.NormalizingUnit}\nSimdata File: {args.SimdataFile}\nMeasDef File: {args.MeasDefFile}\nCom/Res Option: {args.ComResOption}\n')
 
-    postprocessing(args.MeasureName, args.MeasureType, args.Sector, args.NormalizingUnit, args.SimdataFile, args.MeasDefFile)
+    postprocessing(args.MeasureName, args.MeasureType, args.Sector, args.NormalizingUnit, args.SimdataFile, args.MeasDefFile, args.ComResOption)
 
 if __name__ == '__main__':
     main()

@@ -19,7 +19,7 @@ Revision Log:
 import pandas as pd
 import sqlite3
 
-def postprocessing(Measure_name, Measure_type, Sector, Norm_unit, Simdata_file, MeasDef_file):
+def postprocessing(Measure_name, Measure_type, Sector, Norm_unit, Simdata_file, MeasDef_file, BT_option):
     # Unit Conversions
     J_to_kW = 1/3600000
     m2_to_sqft = 10.7639 # used in SQL files
@@ -102,15 +102,16 @@ def postprocessing(Measure_name, Measure_type, Sector, Norm_unit, Simdata_file, 
             cursor.executescript(sql_script)
             print("UES script executed successfully.")
 
-            with open(f'{Sector}/Bldg_Wts.sql', 'r') as file: 
-                sql_script = file.read()
-            cursor.executescript(sql_script)
-            print("Bldg_Wts script executed successfully.")
+            if BT_option == True:
+                with open(f'{Sector}/Bldg_Wts.sql', 'r') as file: 
+                    sql_script = file.read()
+                cursor.executescript(sql_script)
+                print("Bldg_Wts script executed successfully.")
 
-            with open(f'{Sector}/Res.sql', 'r') as file: 
-                sql_script = file.read()
-            cursor.executescript(sql_script)
-            print("Res script executed successfully.")
+                with open(f'{Sector}/Res.sql', 'r') as file: 
+                    sql_script = file.read()
+                cursor.executescript(sql_script)
+                print("Res script executed successfully.")
 
         except sqlite3.Error as e: 
             print(f"An error occurred: {e}")
@@ -146,15 +147,16 @@ def postprocessing(Measure_name, Measure_type, Sector, Norm_unit, Simdata_file, 
             cursor.executescript(sql_script)
             print("UES script executed successfully.")
 
-            with open(f'{Sector}/Bldg_Wts.sql', 'r') as file: 
-                sql_script = file.read()
-            cursor.executescript(sql_script)
-            print("Bldg_Wts script executed successfully.")
+            if BT_option == True:
+                with open(f'{Sector}/Bldg_Wts.sql', 'r') as file: 
+                    sql_script = file.read()
+                cursor.executescript(sql_script)
+                print("Bldg_Wts script executed successfully.")
 
-            with open(f'{Sector}/Com.sql', 'r') as file: 
-                sql_script = file.read()
-            cursor.executescript(sql_script)
-            print("Com script executed successfully.")
+                with open(f'{Sector}/Com.sql', 'r') as file: 
+                    sql_script = file.read()
+                cursor.executescript(sql_script)
+                print("Com script executed successfully.")
 
         except sqlite3.Error as e: 
             print(f"An error occurred: {e}")
