@@ -101,7 +101,7 @@ def postprocessing(Measure_name, Measure_type, Sector, Norm_unit, Simdata_file, 
                 sql_script = file.read()
             cursor.executescript(sql_script)
             print("UES script executed successfully.")
-
+            # Toggle option to include Res building type energy savings
             if BT_option == True:
                 with open(f'{Sector}/Bldg_Wts.sql', 'r') as file: 
                     sql_script = file.read()
@@ -146,7 +146,7 @@ def postprocessing(Measure_name, Measure_type, Sector, Norm_unit, Simdata_file, 
                 sql_script = file.read()
             cursor.executescript(sql_script)
             print("UES script executed successfully.")
-
+            # Toggle option to include com building type energy savings
             if BT_option == True:
                 with open(f'{Sector}/Bldg_Wts.sql', 'r') as file: 
                     sql_script = file.read()
