@@ -37,3 +37,10 @@ Repository = "https://github.com/simularis/deer-ues-tool.git"
 
 [tool.setuptools]
 packages = ["deer_ues_tool"]
+
+[tool.setuptools.package-data]
+deer_ues_tool = [
+    "commercial/*.sql",
+    "residential/*.sql",
+    "lookup/*.csv",
+]

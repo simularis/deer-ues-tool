@@ -22,5 +22,12 @@ setup(
     install_requires=[
         "pandas",
     ],
+    package_data={
+        "deer_ues_tool": [
+            "commercial/*.sql",
+            "residential/*.sql",
+            "lookup/*.csv",
+        ],
+    },
     include_package_data=True,
 )
