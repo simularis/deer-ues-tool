@@ -18,6 +18,12 @@ Revision Log:
 
 import pandas as pd
 import sqlite3
+import io
+
+try:
+    from importlib.resources import files
+except ImportError:
+    from importlib_resources import files
 
 def postprocessing(Measure_name, Measure_type, Sector, Norm_unit, Simdata_file, MeasDef_file, BT_option):
     # Unit Conversions
@@ -58,58 +64,50 @@ def postprocessing(Measure_name, Measure_type, Sector, Norm_unit, Simdata_file, 
     df_measdef = pd.read_csv(MeasDef_file)
     df_measdef.to_sql('MeasDef', connection, if_exists="replace",index=False)
 
-    df_numstor = pd.read_csv('lookup/NumStor.csv')
+    df_numstor = pd.read_csv(io.StringIO(files('deer_ues_tool.lookup').joinpath('NumStor.csv').read_text()))
     df_numstor.to_sql('NumStor', connection, if_exists="replace",index=False)
 
-    df_normunits = pd.read_csv('lookup/NormUnits.csv')
+    df_normunits = pd.read_csv(io.StringIO(files('deer_ues_tool.lookup').joinpath('NormUnits.csv').read_text()))
     df_normunits.to_sql('NormUnits', connection, if_exists="replace",index=False)
 
     # Read the SQL script 
     if Sector == "Residential":
-        df_res = pd.read_csv('lookup/wts_res_bldg.csv')
+        df_res = pd.read_csv(io.StringIO(files('deer_ues_tool.lookup').joinpath('wts_res_bldg.csv').read_text()))
         df_res.to_sql('wts_res_bldg', connection, if_exists="replace")
 
         try:
             # Condition for using Norm unit lookup table
             if Measure_type in ["Wall Insulation", "Ceiling Insulation", "Refrigerator/Freezer", "PTAC/PTHP", "WholeHouseFan"]:
-                with open(f'residential/NormUnitLookup.sql', 'r') as file: 
-                    sql_script = file.read()
+                sql_script = files('deer_ues_tool.residential').joinpath('NormUnitLookup.sql').read_text()
                 cursor.executescript(sql_script)
                 print("Norm units lookup script executed successfully.")
             else: 
-                with open(f'residential/NormUnit.sql', 'r') as file: 
-                    sql_script = file.read()
+                sql_script = files('deer_ues_tool.residential').joinpath('NormUnit.sql').read_text()
                 cursor.executescript(sql_script)
                 print("Norm units script executed successfully.")
                 
-            with open(f'residential/Story_Wts.sql', 'r') as file: 
-                sql_script = file.read()
+            sql_script = files('deer_ues_tool.residential').joinpath('Story_Wts.sql').read_text()
             cursor.executescript(sql_script)
             print("Story_Wts executed successfully.")
             
-            with open(f'residential/Permutations.sql', 'r') as file: 
-                sql_script = file.read()
+            sql_script = files('deer_ues_tool.residential').joinpath('Permutations.sql').read_text()
             cursor.executescript(sql_script)
             print("Permutations script executed successfully.")
 
-            with open(f'residential/UEC.sql', 'r') as file: 
-                sql_script = file.read()
+            sql_script = files('deer_ues_tool.residential').joinpath('UEC.sql').read_text()
             cursor.executescript(sql_script)
             print("UEC script executed successfully.")
 
-            with open(f'residential/UES.sql', 'r') as file: 
-                sql_script = file.read()
+            sql_script = files('deer_ues_tool.residential').joinpath('UES.sql').read_text()
             cursor.executescript(sql_script)
             print("UES script executed successfully.")
 
             if BT_option == True:
-                with open(f'residential/Bldg_Wts.sql', 'r') as file: 
-                    sql_script = file.read()
+                sql_script = files('deer_ues_tool.residential').joinpath('Bldg_Wts.sql').read_text()
                 cursor.executescript(sql_script)
                 print("Bldg_Wts script executed successfully.")
 
-                with open(f'residential/Res.sql', 'r') as file: 
-                    sql_script = file.read()
+                sql_script = files('deer_ues_tool.residential').joinpath('Res.sql').read_text()
                 cursor.executescript(sql_script)
                 print("Res script executed successfully.")
 
@@ -117,44 +115,37 @@ def postprocessing(Measure_name, Measure_type, Sector, Norm_unit, Simdata_file, 
             print(f"An error occurred: {e}")
 
     elif Sector == "Commercial":
-        df_com = pd.read_csv('lookup/wts_com_bldg_2026.csv')
+        df_com = pd.read_csv(io.StringIO(files('deer_ues_tool.lookup').joinpath('wts_com_bldg_2026.csv').read_text()))
         df_com.to_sql('wts_com_bldg_2026', connection, if_exists="replace")
 
         try:     
-            with open(f'commercial/Permutations.sql', 'r') as file: 
-                sql_script = file.read()
+            sql_script = files('deer_ues_tool.commercial').joinpath('Permutations.sql').read_text()
             cursor.executescript(sql_script)
             print("Permutations script executed successfully.")
             # Condition for using Norm unit lookup table
             if Norm_unit == "Area-ft2-BA":
-                with open(f'commercial/NormUnitLookUp.sql', 'r') as file: 
-                    sql_script = file.read()
+                sql_script = files('deer_ues_tool.commercial').joinpath('NormUnitLookUp.sql').read_text()
                 cursor.executescript(sql_script)
                 print("Norm units lookup script executed successfully.")
             else: 
-                with open(f'commercial/NormUnit.sql', 'r') as file: 
-                    sql_script = file.read()
+                sql_script = files('deer_ues_tool.commercial').joinpath('NormUnit.sql').read_text()
                 cursor.executescript(sql_script)
                 print("Norm units script executed successfully.")
 
-            with open(f'commercial/UEC.sql', 'r') as file: 
-                sql_script = file.read()
+            sql_script = files('deer_ues_tool.commercial').joinpath('UEC.sql').read_text()
             cursor.executescript(sql_script)
             print("UEC script executed successfully.")
 
-            with open(f'commercial/UES.sql', 'r') as file: 
-                sql_script = file.read()
+            sql_script = files('deer_ues_tool.commercial').joinpath('UES.sql').read_text()
             cursor.executescript(sql_script)
             print("UES script executed successfully.")
 
             if BT_option == True:
-                with open(f'commercial/Bldg_Wts.sql', 'r') as file: 
-                    sql_script = file.read()
+                sql_script = files('deer_ues_tool.commercial').joinpath('Bldg_Wts.sql').read_text()
                 cursor.executescript(sql_script)
                 print("Bldg_Wts script executed successfully.")
 
-                with open(f'commercial/Com.sql', 'r') as file: 
-                    sql_script = file.read()
+                sql_script = files('deer_ues_tool.commercial').joinpath('Com.sql').read_text()
                 cursor.executescript(sql_script)
                 print("Com script executed successfully.")
 
