@@ -11,7 +11,7 @@ Revision log:
 '''
 
 from gooey import Gooey, GooeyParser
-from postprocessing import postprocessing
+from .postprocessing import postprocessing
 
 @Gooey(program_name = 'Post-Processing'   
 )
