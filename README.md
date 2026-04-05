@@ -61,3 +61,53 @@ A pop-up window will appear when the tool is finished.
 ![](https://github.com/simularis/deer-ues-tool/blob/main/UI/gooey_4.jpg)
 
 The tool output is an energy savings file called **energysavings_{Measure Name}.csv**.
+
+## Developing
+
+### Development Installation
+To install the package in development mode (editable), which allows you to modify the code and test changes immediately:
+
+```bash
+pip install -e .
+```
+
+For development with UI components:
+```bash
+pip install -e ".[ui]"
+```
+
+### Debugging in VSCode
+To debug scripts like `test1.py` in VSCode:
+
+1. **Create a launch configuration** by creating/editing `.vscode/launch.json`:
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Debug test1.py",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/test1.py",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Python: Debug Current File",
+      "type": "python",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    }
+  ]
+}
+```
+
+2. **Set breakpoints** by clicking in the gutter next to the line numbers in VSCode.
+
+3. **Start debugging** by:
+   - Pressing `F5` or
+   - Clicking "Run and Debug" in the left sidebar and selecting the configuration
+
+4. **Use the Debug Console** to inspect variables and evaluate expressions while execution is paused.
