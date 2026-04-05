@@ -31,6 +31,10 @@ dependencies = [
     "pandas",
 ]
 
+[project.optional-dependencies]
+ui = ["gooey"]
+dev = ["gooey"]
+
 [project.urls]
 Homepage = "https://github.com/simularis/deer-ues-tool"
 Repository = "https://github.com/simularis/deer-ues-tool.git"

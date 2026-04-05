@@ -22,6 +22,9 @@ setup(
     install_requires=[
         "pandas",
     ],
+    extras_require={
+        "ui": ["gooey"],
+    },
     package_data={
         "deer_ues_tool": [
             "commercial/*.sql",
