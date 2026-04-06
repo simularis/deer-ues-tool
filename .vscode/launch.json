@@ -10,7 +10,7 @@
       "justMyCode": true
     },
     {
-      "name": "Python: Module",
+      "name": "Python: UIGooey",
       "type": "python",
       "request": "launch",
       "module": "deer_ues_tool.UIgooey",

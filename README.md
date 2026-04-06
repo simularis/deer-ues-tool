@@ -62,6 +62,12 @@ A pop-up window will appear when the tool is finished.
 
 The tool output is an energy savings file called **energysavings_{Measure Name}.csv**.
 
+### Command-line mode
+You can bypass the user interface and run the tool with command line options as follows:
+```bash
+python -m deer_ues_tool.UIgooey --ignore-gooey --MeasureName SWHC012 --MeasureType "Cooling Capacity" --Sector Commercial --NormalizingUnit "Cap-Tons" --SimdataFile .\simdata_SWHC012.csv --MeasDefFile .\MeasDef_SWHC012.csv --ComResOption
+```
+
 ## Developing
 
 ### Development Installation
@@ -77,32 +83,9 @@ pip install -e ".[ui]"
 ```
 
 ### Debugging in VSCode
-To debug scripts like `test1.py` in VSCode:
+To debug scripts like `UIgooey.py` in VSCode:
 
-1. **Create a launch configuration** by creating/editing `.vscode/launch.json`:
-```json
-{
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Python: Debug test1.py",
-      "type": "python",
-      "request": "launch",
-      "program": "${workspaceFolder}/test1.py",
-      "console": "integratedTerminal",
-      "justMyCode": true
-    },
-    {
-      "name": "Python: Debug Current File",
-      "type": "python",
-      "request": "launch",
-      "program": "${file}",
-      "console": "integratedTerminal",
-      "justMyCode": true
-    }
-  ]
-}
-```
+1. **Create a launch configuration** by editing `.vscode/launch.json`. If you need to directly run a module within the package, add a configuration for the module. Each configuration shows up in the Run and Debug panel.
 
 2. **Set breakpoints** by clicking in the gutter next to the line numbers in VSCode.
 
