@@ -1,0 +1,7 @@
+EquipmentType,OfferingID,BldgHVAC,MAT,BldgVint,EnergyImpactID,PreTechID,StdTechID,MeasTechID
+HVAC Occupancy Sensor,C,cDXGF,NC,New,NE-HV_Tech-OccSens-cDXGF-NC,,NE-HV_Tech-OccSens-cDXGF-NoOccSens,NE-HV_Tech-OccSens-cDXGF
+HVAC Occupancy Sensor,D,cDXGF,NR,Ex,NE-HV_Tech-OccSens-cDXGF-NR,,NE-HV_Tech-OccSens-cDXGF-NoOccSens,NE-HV_Tech-OccSens-cDXGF
+HVAC Occupancy Sensor,E,cDXHP,NC,New,NE-HV_Tech-OccSens-cDXHP-NC,,NE-HV_Tech-OccSens-cDXHP-NoOccSens,NE-HV_Tech-OccSens-cDXHP
+HVAC Occupancy Sensor,F,cDXHP,NR,Ex,NE-HV_Tech-OccSens-cDXHP-NR,,NE-HV_Tech-OccSens-cDXHP-NoOccSens,NE-HV_Tech-OccSens-cDXHP
+HVAC Occupancy Sensor,C,cDXGF,NC,New,NE-HV_Tech-OccSens-cDXGF-NC,,NE-HV_Tech-OccSens-cDXGF-NoOccSens,NE-HV_Tech-OccSens-cDXGF
+HVAC Occupancy Sensor,D,cDXGF,NR,Ex,NE-HV_Tech-OccSens-cDXGF-NR,,NE-HV_Tech-OccSens-cDXGF-NoOccSens,NE-HV_Tech-OccSens-cDXGF

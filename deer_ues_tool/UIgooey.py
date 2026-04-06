@@ -11,7 +11,9 @@ Revision log:
 '''
 
 from gooey import Gooey, GooeyParser
-from postprocessing import postprocessing
+# Use an absolute import to allow running this script directly for debugging purposes,
+# while still allowing the postprocessing function to be imported when the package is used normally.
+from deer_ues_tool import postprocessing
 
 @Gooey(program_name = 'Post-Processing'   
 )

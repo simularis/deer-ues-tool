@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "deer-ues-tool"
+version = "0.1.0"
+description = "A Python package for expediting unit energy savings calculations from DEER prototypes"
+readme = "README.md"
+requires-python = ">=3.7"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "Kelsey Yen", email = "kyen@solaris-technical.com"},
+    {name = "Nicholas Fette", email = "nfette@solaris-technical.com"},
+]
+maintainers = [
+    {name = "Solaris Technical LLC"},
+]
+keywords = ["DEER", "energy", "post-processing", "savings", "EnergyPlus"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "pandas",
+]
+
+[project.optional-dependencies]
+ui = ["gooey"]
+dev = ["gooey"]
+
+[project.urls]
+Homepage = "https://github.com/simularis/deer-ues-tool"
+Repository = "https://github.com/simularis/deer-ues-tool.git"
+
+[tool.setuptools]
+packages = ["deer_ues_tool"]
+
+[tool.setuptools.package-data]
+deer_ues_tool = [
+    "commercial/*.sql",
+    "residential/*.sql",
+    "lookup/*.csv",
+]
