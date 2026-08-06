@@ -929,40 +929,6 @@ def gather_sim_data_long(study: Path, queryfile: Path, parallel=False):
                     yield (sqlfile, bldgloc, metadata, tabular_data)
                     time.sleep(0.001)
 
-def gather_sim_data_to_csv(study: Path, queryfile: Path, csvfile: Path,
-                           parallel = True,
-                           chunksize = None):
-    # 2024-05-15 Todo
-    # User testing observed that inconsistent filenames may result in inconsistent
-    # column alignment in CSV mode. Workaround is to change chunksize=None.
-    gather = gather_sim_data(study, queryfile, parallel)
-    with open(csvfile, 'w', newline='') as f:
-        if chunksize is None:
-            # Get all records at once to guarantee headers are the same for all rows
-            records = list(gather)
-            df_sim_data = pd.DataFrame.from_records(records)
-            df_sim_data.to_csv(f, index=False)
-        else:
-            for i,records in enumerate(batched(gather, chunksize)):
-                df_sim_data = pd.DataFrame.from_records(records)
-                df_sim_data.to_csv(f, index=False, header=(i==0))
-
-def gather_sim_data_to_sqlite(study: Path, queryfile: Path, sqlfile: Path,
-                              parallel = True,
-                              chunksize = None):
-    gather = gather_sim_data(study, queryfile, parallel)
-    with connect(sqlfile) as conn:
-        conn.execute('DROP TABLE IF EXISTS "sim_data";')
-        if chunksize is None:
-            # Get all records at once to gaurantee headers are the same for all rows
-            records = list(gather)
-            df_sim_data = pd.DataFrame.from_records(records)
-            df_sim_data.to_sql('sim_data', conn, index=False)
-        else:
-            for i,records in enumerate(batched(gather, chunksize)):
-                df_sim_data = pd.DataFrame.from_records(records)
-                df_sim_data.to_sql('sim_data', conn, index=False, if_exists='append')
-
 def gather_sim_data_to_sqlite_long(study: Path, queryfile: Path, sqlfile: Path,
                               parallel = True):
 
@@ -991,43 +957,6 @@ def gather_sim_data_to_sqlite_long(study: Path, queryfile: Path, sqlfile: Path,
     finally:
         conn.close()
 
-# Added by kyen on 1-14-26 for long table csv option
-def gather_sim_data_to_csv_long(
-        sqlfile : Path = 'simdata.sqlite',
-        csvfile : Path = 'simdata.csv'):
-    """Save a CSV report (simdata.csv) in long table format for use in other calculations.
-    
-    Requires that data are already stored in long table format in a database file (simdata.sqlite)."""
-
-    pass
-    conn = connect(sqlfile)
-    cursor = conn.cursor()
-    # Execute a query to get the data
-    cursor.execute("SELECT * FROM sim_tabular")
-    # Fetchall data
-    rows = cursor.fetchall()
-    # Convert to DataFrame
-    df = pd.DataFrame(rows, columns=[column[0] for column in cursor.description])
-    # Write dataframe to CSV
-    df.to_csv(csvfile, index=False)
-    
-    # #Scratch work for pargs
-    # gather = gather_sim_data_to_sqlite(study, queryfile, parallel)
-    # with open(csvfile, 'w', newline='') as f:
-    # # Convert to DataFrame
-    #     df = pd.DataFrame(rows, columns=[column[0] for column in cursor.description])
-    # # Write dataframe to CSV
-    #     df.to_csv('simdata.csv', index=False)
-    #     if chunksize is None:
-    #     # Get all records at once to guarantee headers are the same for all rows
-    #         records = list(gather)
-    #         df_sim_data = pd.DataFrame.from_records(records)
-    #         df_sim_data.to_csv(f, index=False)
-    #     else:
-    #         for i,records in enumerate(batched(gather, chunksize)):
-    #             df_sim_data = pd.DataFrame.from_records(records)
-    #             df_sim_data.to_csv(f, index=False, header=(i==0))
-
 def build_cli_parser(parser: argparse.ArgumentParser,
                      study_kwargs = {},
                      queryfile_kwargs = {},
@@ -1045,9 +974,6 @@ def build_cli_parser(parser: argparse.ArgumentParser,
     parser.add_argument('-P', '--parallel', action='store_false', help='Disable parallel mode.')
     parser.add_argument('--logfile', type=Path, default='result2.log',
                         help='Log file for script diagnostics.')
-    parser.add_argument('-c', '--csv', action='store_true', help='Write output in wide csv format.')
-    parser.add_argument('-l', '--long', action='store_true', help='If writing to CSV, store data in tabular (long) format.')
-    parser.add_argument('-w', '--wide', action='store_true', help='If writing to SQLite, store data in wide format.')
 
 def cli_main():
     """Starts the script on command line."""
@@ -1057,14 +983,7 @@ def cli_main():
     configure_logging(pargs.logfile)
     log.info(f"Writing diagnostics to {pargs.logfile}")
     try:
-        if pargs.csv:
-            gather_sim_data_to_csv(pargs.study, pargs.queryfile, 'simdata.csv', pargs.parallel)
-        elif pargs.long:
-            gather_sim_data_to_csv_long(pargs.study, pargs.queryfile, 'simdata_long.csv', pargs.parallel)
-        elif pargs.wide:
-            gather_sim_data_to_sqlite(pargs.study, pargs.queryfile, 'simdata.sqlite', pargs.parallel)
-        else:
-            gather_sim_data_to_sqlite_long(pargs.study, pargs.queryfile, 'simdata.sqlite', pargs.parallel)
+        gather_sim_data_to_sqlite_long(pargs.study, pargs.queryfile, 'simdata.sqlite', pargs.parallel)
     finally:
         _stop_logging()
 
