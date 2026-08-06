@@ -867,8 +867,8 @@ def build_cli_parser(parser: argparse.ArgumentParser,
     parser.add_argument('-q','--queryfile', type=Path, default='query.txt',
                         help=r'Query file, e.g. query.txt',
                         **queryfile_kwargs)
-    #parser.add_argument('-o','--output', type=Path, default='simdata.csv',
-    #                    help=r'Output file, e.g. simdata.csv',
+    #parser.add_argument('-o','--output', type=Path, default='simdata.sqlite',
+    #                    help=r'Output file, e.g. simdata.sqlite',
     #                    **outputfile_kwargs)
     parser.add_argument('-P', '--parallel', action='store_false', help='Disable parallel mode.')
 
@@ -891,21 +891,14 @@ def gooey_main():
           #outputfile_kwargs = dict(widget='FileChooser')
           )
     pargs = parser.parse_args()
-    if pargs.csv:
-        gather_sim_data_to_csv(pargs.study, pargs.queryfile, 'simdata.csv', pargs.parallel)
-    elif pargs.long:
-        gather_sim_data_to_csv_long(pargs.study, pargs.queryfile, 'simdata_long.csv', pargs.parallel)
-    elif pargs.wide:
-        gather_sim_data_to_sqlite(pargs.study, pargs.queryfile, 'simdata.sqlite', pargs.parallel)
-    else:
-        gather_sim_data_to_sqlite_long(pargs.study, pargs.queryfile, 'simdata.sqlite', pargs.parallel)
+    gather_sim_data_to_sqlite_long(pargs.study, pargs.queryfile, 'simdata.sqlite', pargs.parallel)
 
 def test():
     """Starts the script with hard-coded options."""
     #study = Path(r'C:\DEER2026\SWHC012-nick\commercial measures\SWHC012-04 Occupancy Sensor')
     study = Path(r'C:\DEER2026\nf_com_testing_dhw\commercial measures\SWXX000-00 Measure Name')
     queryfile = Path(r'..\querylibrary\query_default.txt')
-    gather_sim_data_to_csv(study, queryfile, 'simdata.csv', parallel=False)
+    gather_sim_data_to_sqlite_long(study, queryfile, 'simdata.sqlite', parallel=False)
 
 if "__main__" == __name__:
     cli_main()
