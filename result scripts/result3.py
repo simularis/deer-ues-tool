@@ -64,6 +64,7 @@ import numpy as np
 import pandas as pd
 import tqdm
 
+## Functions for DEER peak period calculation, based on climate zone and version of DEER definition.
 def get_deer_peak_day_E5152(bldgloc: str):
     """Return a for DEER peak period start day lookups.
     Dates are from Resolution E-5152 (DEER2023) Attachment A, Table A-3-2.
