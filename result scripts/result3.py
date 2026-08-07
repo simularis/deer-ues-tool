@@ -208,14 +208,11 @@ def get_deer_peak_multipliers(BldgLoc: str,
         dpm = deer_peak_multipliers('CZ11')
         dpload = sum(load_data * dpm)
     """
-    if version == 'E5152':
-        peak_day = get_deer_peak_day_E5152(BldgLoc)
-    elif version == 'E5350':
-        peak_day = get_deer_peak_day_E5350(BldgLoc)
-    elif version == 'CZ2025':
-        peak_day = get_deer_peak_day_CZ2025(BldgLoc)
-    else:
-        raise ValueError(f'Unrecognized peak date version: {version}')
+    try:
+        peak_day = DEER_PEAK_DAY_LOOKUP[version](BldgLoc)
+    except KeyError as exc:
+        raise ValueError(f'Unrecognized peak date version: {version}') from exc
+
     # In case start_hr and end_hr are given in daylight saving time (DST), shift back to standard time.
     # time_dst = time_standard + 1
     start_hr -= 1 * dst
@@ -356,7 +353,6 @@ def build_query_with_special_cases(resultspec: ResultSpec, finalize = True) -> s
         query += ";"
     agg_columns.append('Units')
     return query, agg_columns
-
 
 def get_sim_hourly(conn: Connection, column_filter=None):
     """Get simulation hourly results from one EnergyPlus SQLite output file.
@@ -627,6 +623,7 @@ def get_runs_instances(study: Path, search_pattern = '**/instance*-out.sql', exc
         # pathsub = (r'runs/','')
         #metadata['File Name'] = re.sub(*pathsub, relstr, 1)
         metadata['File Name'] = relstr
+        metadata['simID'] = relstr
         metadata['BldgLoc'] = bldgloc
         metadata['BldgType'] = None
         metadata['Story'] = None
@@ -704,33 +701,102 @@ def gather_sim_data_long(study: Path, queryfile: Path, parallel=False):
                     yield (sqlfile, bldgloc, metadata, tabular_data)
                     time.sleep(0.001)
 
-def gather_sim_data_to_sqlite_long(study: Path, queryfile: Path, sqlfile: Path,
-                              parallel = True):
+def gather_sim_data_to_sqlite_long(
+        study: Path,
+        queryfile: Path,
+        sqlfile_out: Path,
+        parallel=True):
+    """Write sim_metadata, sim_tabular, sim_deerpeak, and sim_hourly to one SQLite database."""
 
-    conn = connect(sqlfile)
+    conn_out = connect(sqlfile_out)
+
     try:
-        with conn:
-            conn.execute('DROP TABLE IF EXISTS "sim_metadata";')
-            conn.execute('DROP TABLE IF EXISTS "sim_tabular";')
-        gather = gather_sim_data_long(study, queryfile, parallel)
-        for (sqlfile, bldgloc, metadata, tabular_data) in gather:
-            # DEBUG
-            #print(sqlfile)
-            #print(tabular_data)
-            #print(metadata)
+        with conn_out:
+            conn_out.execute('DROP TABLE IF EXISTS "sim_metadata";')
+            conn_out.execute('DROP TABLE IF EXISTS "sim_tabular";')
+            conn_out.execute('DROP TABLE IF EXISTS "sim_deerpeak";')
+            conn_out.execute('DROP TABLE IF EXISTS "sim_hourly";')
 
-            tabular_data.insert(0, "filename", metadata['File Name'])
-            #print(tabular_data.dtypes)
+        gather = gather_sim_data_long(study, queryfile, parallel)
+
+        for sqlfile, bldgloc, metadata, tabular_data in gather:
+            simID = metadata['simID']
             df_metadata = pd.DataFrame.from_dict([metadata])
 
-            if tabular_data.empty:
-                continue
-            with conn:
-                df_metadata.to_sql('sim_metadata', conn, index=False, if_exists='append')
-                tabular_data.to_sql('sim_tabular', conn, index=False, if_exists='append')
+            # Add simID to tabular data so it can be joined to sim_metadata.
+            if not tabular_data.empty:
+                tabular_data.insert(0, 'simID', simID)
+
+            # Calculate long-format DEER peak data and hourly data for this simulation file.
+            with connect(sqlfile) as conn_sim:
+                deerpeak_data = get_sim_deer_peak_long(
+                    conn=conn_sim,
+                    bldgloc=bldgloc,
+                    simID=simID,
+                    column_filter=DEERPEAK_COLUMNS,
+                    versions=PEAK_VERSION
+                )
+
+                hourly_data = get_sim_hourly_blob(conn_sim, simID)
+
+            with conn_out:
+                df_metadata.to_sql(
+                    'sim_metadata',
+                    conn_out,
+                    index=False,
+                    if_exists='append'
+                )
+
+                if not tabular_data.empty:
+                    tabular_data.to_sql(
+                        'sim_tabular',
+                        conn_out,
+                        index=False,
+                        if_exists='append'
+                    )
+
+                if not deerpeak_data.empty:
+                    deerpeak_data.to_sql(
+                        'sim_deerpeak',
+                        conn_out,
+                        index=False,
+                        if_exists='append'
+                    )
+
+                
+                if not hourly_data.empty:
+                    hourly_data.to_sql(
+                        'sim_hourly',
+                        conn_out,
+                        index=False,
+                        if_exists='append'
+                    )
+
+        # Add indexes after data are loaded.
+        with conn_out:
+            conn_out.execute(
+                'CREATE INDEX IF NOT EXISTS idx_sim_metadata_simID '
+                'ON sim_metadata(simID);'
+            )
+            conn_out.execute(
+                'CREATE INDEX IF NOT EXISTS idx_sim_tabular_simID '
+                'ON sim_tabular(simID);'
+            )
+            conn_out.execute(
+                'CREATE INDEX IF NOT EXISTS idx_sim_deerpeak_simID '
+                'ON sim_deerpeak(simID);'
+            )
+            conn_out.execute(
+                'CREATE INDEX IF NOT EXISTS idx_sim_deerpeak_lookup '
+                'ON sim_deerpeak(simID, VarName, Version);'
+            )
+            conn_out.execute(
+                'CREATE INDEX IF NOT EXISTS idx_sim_hourly_simID '
+                'ON sim_hourly(simID);'
+            )
 
     finally:
-        conn.close()
+        conn_out.close()
 
 def build_cli_parser(parser: argparse.ArgumentParser,
                      study_kwargs = {},
