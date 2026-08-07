@@ -35,9 +35,12 @@ Changelog
 DEERPEAK_COLUMNS = ["Electricity:Facility [J](Hourly)"]
 # Do you want to append "(units)"" in the column name, if available?
 APPEND_UNITS = False
-# Which definition of peak period dates to use?
-PEAK_VERSION = 'CZ2025' # 'E5152', 'E5350', 'CZ2025'
+# Peak period versions to use for DEER peak calculation.
+PEAK_VERSION = ['E5152', 'E5350', 'CZ2025']
 
+# Select columns from hourly files to save into sim_hourly.
+# None means save all hourly variables from ReportDataDictionary/ReportData.
+HOURLY_COLUMNS = None
 
 ##STEP 0: Setup (import all necessary libraries)
 import re
@@ -236,9 +239,20 @@ def get_deer_peak_day_CZ2025(bldgloc: str):
     ])
     return peakperspec[bldgloc]
 
+# Lookup table for DEER peak period start day functions.
+DEER_PEAK_DAY_LOOKUP = {
+'E5152': get_deer_peak_day_E5152,
+'E5350': get_deer_peak_day_E5350,
+'CZ2025': get_deer_peak_day_CZ2025,
+}
+
 @cache
 def get_deer_peak_multipliers(BldgLoc: str,
-                          days=3, start_hr=16, end_hr=21, dst=True, version=PEAK_VERSION):
+                              version: str,
+                              days=3,
+                              start_hr=16,
+                              end_hr=21,
+                              dst=True):
     """Return a masking array useful to calculate an average over DEER Peak Period.
 
     Note that for compatibility, simulation data must be an 8760-length array
@@ -247,6 +261,8 @@ def get_deer_peak_multipliers(BldgLoc: str,
     Inputs:
         BldgLoc: str
             CEC climate zone, e.g. CZ01 through CZ16.
+        version: str
+            Which definition of peak period dates to use.
         days: int
             The number of days in the DEER Peak Period (default 3)
         start_hr: int
@@ -501,6 +517,93 @@ def get_sim_hourly(conn: Connection, column_filter=None):
     ReportDataWide = ReportData2.pivot(index='LookupKey', columns='TimeIndex', values='Value')
 
     return ReportDataWide
+
+def get_sim_hourly_blob(conn, simID):
+    """Return sim_hourly rows with hourly values stored as a BLOB."""
+
+    ReportDataWide = get_sim_hourly(conn)
+
+    if ReportDataWide is None or ReportDataWide.empty:
+        return pd.DataFrame(columns=["SimID", "VarName", "VarVal"])
+
+    rows = []
+
+    for varname, values in ReportDataWide.iterrows():
+        rows.append({
+            "SimID": simID,
+            "VarName": varname,
+            "VarVal": values.to_numpy(dtype=np.float64).tobytes()
+        })
+
+    return pd.DataFrame(rows)
+
+def get_sim_deer_peak_long(
+        conn: Connection,
+        bldgloc: str,
+        simID: str,
+        column_filter=DEERPEAK_COLUMNS,
+        versions=PEAK_VERSION):
+    """Calculate DEER peak demand for all requested versions and return long data.
+
+    Output table columns:
+        simID
+            Join key.
+        VarName
+            Hourly variable name, such as Electricity:Facility [J](Hourly).
+        Version
+            Peak-period definition, such as E5152, E5350, or CZ2025.
+        PeakDemand_kW
+            Average demand over the DEER peak period, converted from hourly J.
+        PeakValue_Raw
+            Raw averaged EnergyPlus hourly value before unit conversion.
+        RawUnits
+            Description of the raw units.
+     """
+
+    empty_cols = [
+        'simID',
+        'VarName',
+        'Version',
+        'PeakDemand_kW',
+        'PeakValue_Raw',
+        'RawUnits'
+    ]
+
+    # Load hourly data once for this simulation file.
+    ReportDataWide = get_sim_hourly(conn, column_filter=column_filter)
+
+    # Sizing runs, failed runs, or files without the requested hourly columns may not have 8760 hours.
+    if ReportDataWide is None or ReportDataWide.empty or ReportDataWide.shape[1] != 8760:
+        return pd.DataFrame(columns=empty_cols)
+
+    records = []
+
+    for version in versions:
+        dpm = get_deer_peak_multipliers(bldgloc, version=version)
+        peak_values_raw = ReportDataWide.to_numpy().dot(dpm)
+
+        for varname, peak_value_raw in zip(ReportDataWide.index, peak_values_raw):
+            # EnergyPlus hourly electricity variables reported as [J](Hourly)
+            # are energy per one-hour reporting interval.
+            # Average demand in kW = average J per hour / 3,600,000 J per kWh.
+            if '[J](Hourly)' in varname:
+                peak_demand_kw = peak_value_raw / 3_600_000
+                raw_units = 'J per hourly timestep'
+            else:
+                # Do not force non-J hourly variables into kW.
+                peak_demand_kw = None
+                raw_units = None
+
+            records.append({
+                'simID': simID,
+                'VarName': varname,
+                'Version': version,
+                'PeakDemand_kW': peak_demand_kw,
+                'PeakValue_Raw': peak_value_raw,
+                'RawUnits': raw_units
+            })
+
+    return pd.DataFrame.from_records(records, columns=empty_cols)
 
 def get_sim_deer_peak(conn: Connection, bldgloc: str, column_filter=DEERPEAK_COLUMNS, loginfo: str = ''):
     """Get simulation DEER Peak results from one EnergyPlus SQLite output file.
