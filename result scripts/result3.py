@@ -31,9 +31,12 @@ Changelog
 DEERPEAK_COLUMNS = ["Electricity:Facility [J](Hourly)"]
 # Do you want to append "(units)"" in the column name, if available?
 APPEND_UNITS = False
-# Which definition of peak period dates to use?
-PEAK_VERSION = 'CZ2025' # 'E5152', 'E5350', 'CZ2025'
+# Peak period versions to use for DEER peak calculation.
+PEAK_VERSION = ['E5152', 'E5350', 'CZ2025']
 
+# Select columns from hourly files to save into sim_hourly.
+# None means save all hourly variables from ReportDataDictionary/ReportData.
+HOURLY_COLUMNS = None
 
 ##STEP 0: Setup (import all necessary libraries)
 import re
@@ -161,9 +164,20 @@ def get_deer_peak_day_CZ2025(bldgloc: str):
     ])
     return peakperspec[bldgloc]
 
+# Lookup table for DEER peak period start day functions.
+DEER_PEAK_DAY_LOOKUP = {
+'E5152': get_deer_peak_day_E5152,
+'E5350': get_deer_peak_day_E5350,
+'CZ2025': get_deer_peak_day_CZ2025,
+}
+
 @cache
 def get_deer_peak_multipliers(BldgLoc: str,
-                          days=3, start_hr=16, end_hr=21, dst=True, version=PEAK_VERSION):
+                              version: str,
+                              days=3,
+                              start_hr=16,
+                              end_hr=21,
+                              dst=True):
     """Return a masking array useful to calculate an average over DEER Peak Period.
 
     Note that for compatibility, simulation data must be an 8760-length array
@@ -172,6 +186,8 @@ def get_deer_peak_multipliers(BldgLoc: str,
     Inputs:
         BldgLoc: str
             CEC climate zone, e.g. CZ01 through CZ16.
+        version: str
+            Which definition of peak period dates to use.
         days: int
             The number of days in the DEER Peak Period (default 3)
         start_hr: int
@@ -412,153 +428,92 @@ def get_sim_hourly(conn: Connection, column_filter=None):
 
     return ReportDataWide
 
-def get_sim_deer_peak(conn: Connection, bldgloc: str, column_filter=DEERPEAK_COLUMNS):
-    """Get simulation DEER Peak results from one EnergyPlus SQLite output file.
+def get_sim_hourly_blob(conn, simID):
+    """Return sim_hourly rows with hourly values stored as a BLOB."""
 
-    Inputs:
-        conn: sqlite3.Connection
-            An open connection to the SQLite output file from an EnergyPlus simulation.
-        bldgloc: str
-            The CEC climate zone used to lookup up DEER peak period dates.
-    Returns:
-        deer_peak_values: dict
-            Lookup where each item `(k, v)` represents the average value `v`
-            of the hourly variable named `k` over the DEER Peak Period.
+    ReportDataWide = get_sim_hourly(conn)
 
-    E-5350: Effective PY2028
-    """
-    # Get all available hourly results with shape (N, 8760)
-    ReportDataWide = get_sim_hourly(conn, column_filter=column_filter)
-    #ReportDataWide = ReportDataWide.loc[DEERPEAK_COLUMNS]
-    if ReportDataWide.shape[1] != 8760:
-        # No hourly data. This can happen if simulation created the output file but failed to complete.
-        # Or if the file represents a sizing run.
-        return None
-    # Get 8760-length mask for DEER Peak Period (normalized)
-    dpm = get_deer_peak_multipliers(bldgloc)
-    # Compute the average value over the DEER Peak Period
-    # In testing, pandas.DataFrame.mul() takes about 1 ms
-    #deer_peak_values = ReportDataWide.mul(dpm,axis=1).sum(axis=1).to_dict()
-    # In testing, pandas.DataFrame.to_numpy().dot() takes about 7 µs
-    deer_peak_values = dict(zip(ReportDataWide.index, ReportDataWide.to_numpy().dot(dpm)))
-    return deer_peak_values
+    if ReportDataWide is None or ReportDataWide.empty:
+        return pd.DataFrame(columns=["SimID", "VarName", "VarVal"])
 
-def get_sim_tabular(
+    rows = []
+
+    for varname, values in ReportDataWide.iterrows():
+        rows.append({
+            "SimID": simID,
+            "VarName": varname,
+            "VarVal": values.to_numpy(dtype=np.float64).tobytes()
+        })
+
+    return pd.DataFrame(rows)
+
+def get_sim_deer_peak_long(
         conn: Connection,
-        resultspec: ResultSpec,
-        aggtype = 'sum'
-        ) -> tuple:
-    """Returns result information based on a single query from tabular reports.
+        bldgloc: str,
+        simID: str,
+        column_filter=DEERPEAK_COLUMNS,
+        versions=PEAK_VERSION):
+    """Calculate DEER peak demand for all requested versions and return long data.
 
-    Inputs:
-        conn: sqlite3.Connection
-            Open connection to the model instance results database (e.g. instance-out.sql)
-
-        aggtype: str
-            Aggregation type, e.g. sum. Explains how to combine multiple values where
-            the query includes a wildcard (*).
-
-    Returns (sim_data_detail, sim_data_agg) where:
-        sim_data_detail: pandas.DataFrame or None
-            DataFrame of raw results from the model, possibly including multiple rows in case of a wildcard.
-        sim_data_agg: float or None
-            Single value. In case of wildcard in query, this is calculated according to aggtype.
+    Output table columns:
+        simID
+            Join key.
+        VarName
+            Hourly variable name, such as Electricity:Facility [J](Hourly).
+        Version
+            Peak-period definition, such as E5152, E5350, or CZ2025.
+        PeakDemand_kW
+            Average demand over the DEER peak period, converted from hourly J.
+        PeakValue_Raw
+            Raw averaged EnergyPlus hourly value before unit conversion.
+        RawUnits
+            Description of the raw units.
     """
-    if not isinstance(resultspec, ResultSpec):
-        resultspec = makeResultSpec(resultspec)
-    query, agg_columns = build_query_with_special_cases(resultspec)
 
-    try:
-        sim_data_detail = pd.read_sql_query(query, conn,  params=asdict(resultspec), dtype={'Value':float})
-    except ValueError:
-        # If user requested a query that returns a string value
-        # To do: aggregation doesn't work with string type results.
-        sim_data_detail = pd.read_sql_query(query, conn,  params=asdict(resultspec))
+    empty_cols = [
+        'simID',
+        'VarName',
+        'Version',
+        'PeakDemand_kW',
+        'PeakValue_Raw',
+        'RawUnits'
+    ]
 
-    if sim_data_detail.empty:
-        # No data found matching result spec
-        return None, None
-    elif len(sim_data_detail) == 1:
-        # Only one value, no aggregation required
-        return sim_data_detail, sim_data_detail.loc[0,'Value']
-    else:
-        # Aggregation requested. Calculate a single float value.
-        sim_data_agg = (
-            sim_data_detail
-            .groupby(agg_columns)
-            ['Value'].agg(aggtype).iloc[0]
-        )
-        return sim_data_detail, sim_data_agg
+    # Load hourly data once for this simulation file.
+    ReportDataWide = get_sim_hourly(conn, column_filter=column_filter)
 
-def get_sim_peak_and_tabular(queryfile: Path,
-                             sqlfile: Path,
-                             bldgloc: str,
-                             metadata: dict):
-    r"""
-    Read selected data entries from SQL outputs.
-    Result set specifications are parsed from query.txt, e.g. (resultspec, name).
-    Output columns will have units appended to name, like "name (Units)".
+    # Sizing runs, failed runs, or files without the requested hourly columns may not have 8760 hours.
+    if ReportDataWide is None or ReportDataWide.empty or ReportDataWide.shape[1] != 8760:
+        return pd.DataFrame(columns=empty_cols)
 
-    Inputs:
-        queryfile: Path
-            The filename of a modelkit-style query.txt file.
-        sqlfile: Path
-            The filename of an EnergyPlus output file (SQLite format).
-        bldgloc: str
-            The CEC climate zone, e.g. CZ01 through CZ16.
-        metadata: dict
-            An dictionary of identifier information prepended to the results.
-            For compatibility use metadata = {'File Name': 'path/to/model/instance-out.sql'}
+    records = []
 
-    Returns:
-        sim_data: dict(str: float | None).
-            Mapping of (name, value) from both query results
-            and hourly averages over the DEER peak period.
-    """
-    sim_data = metadata.copy() # To store results
-    with connect(sqlfile) as conn:
-        # Start with the query data results
-        listlist_query_path_and_name = parse_query_file(queryfile)
-        # Don't separate "groups" of queries but group them all together.
-        # result_sets = []
-        for list_query_path_and_name in listlist_query_path_and_name:
-            # Don't separate "groups" of queries but group them all together.
-            # sim_data_detail, sim_data_agg = [], []
-            for resultspec, user_column_name in list_query_path_and_name:
-                # 2025-01-22 Updated Nicholas Fette
-                # Default to the column name from the result query without attempting to append unit symbol from results.
-                # This avoids errors due to mismatched column names when a file is missing one or more results.
-                # Useful for concatenating results in a wide-format table.
-                output_column_name = user_column_name
+    for version in versions:
+        dpm = get_deer_peak_multipliers(bldgloc, version=version)
+        peak_values_raw = ReportDataWide.to_numpy().dot(dpm)
 
-                if APPEND_UNITS:
-                    # For consistency between files, do not append "(units)" in the column name for wildcard queries.
-                    if "*" not in resultspec.to_string() and sim_data_detail1 is not None:
-                        units = sim_data_detail1['Units'].iloc[0]
-                        output_column_name = f"{user_column_name} ({units})"
+        for varname, peak_value_raw in zip(ReportDataWide.index, peak_values_raw):
+            # EnergyPlus hourly electricity variables reported as [J](Hourly)
+            # are energy per one-hour reporting interval.
+            # Average demand in kW = average J per hour / 3,600,000 J per kWh.
+            if '[J](Hourly)' in varname:
+                peak_demand_kw = peak_value_raw / 3_600_000
+                raw_units = 'J per hourly timestep'
+            else:
+                # Do not force non-J hourly variables into kW.
+                peak_demand_kw = None
+                raw_units = None
 
-                sim_data_detail1, sim_data_agg1 = get_sim_tabular(conn, resultspec)
-                if sim_data_detail1 is None:
-                    # No data found matching the result spec.
-                    # 2025-01-22 Updated Nicholas Fette
-                    # For consistency between files, store a None/NULL result for this column.
-                    # To-do: In sqlite output mode, pandas may not be able to guess the dtype.
-                    # As a workaround, user may manually alter the sim_data table column types, then run the script.
-                    sim_data.update({output_column_name: None})
-                    continue
-                # This script does not compile detail of all rows included in wildcard queries:
-                #sim_data_detail.append(sim_data_detail1)
-                if sim_data_agg1 is not None:
-                    sim_data.update({output_column_name: sim_data_agg1})
-            #sim_data_agg.append(sizing_agg_row)
+            records.append({
+                'simID': simID,
+                'VarName': varname,
+                'Version': version,
+                'PeakDemand_kW': peak_demand_kw,
+                'PeakValue_Raw': peak_value_raw,
+                'RawUnits': raw_units
+            })
 
-        # Now get the DEER Peak values from hourly data
-        # Column name(s) for DEER Peak average values are taken directly from hourly output column name.
-        deer_peak_values = get_sim_deer_peak(conn, bldgloc)
-        if deer_peak_values is not None:
-            sim_data.update(deer_peak_values)
-
-    return sim_data
+    return pd.DataFrame.from_records(records, columns=empty_cols)
 
 def get_sim_tabular_long(
         queryfile: Path,
