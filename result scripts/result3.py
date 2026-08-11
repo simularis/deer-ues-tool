@@ -625,16 +625,19 @@ def get_runs_instances(study: Path, search_pattern = '**/instance*-out.sql', exc
         metadata['File Name'] = relstr
         metadata['simID'] = relstr
         metadata['BldgLoc'] = bldgloc
-        metadata['BldgType'] = None
-        metadata['Story'] = None
-        metadata['BldgHVAC'] = None
-        metadata['BldgVint'] = None
-        metadata['TechGroup'] = None
-        metadata['TechType'] = None
-        metadata['TechID'] = None
-        metadata['Cohort'] = None
-        metadata['Case'] = None
 
+        parts = relpath.parts
+        cohort = parts[2]
+        case = parts[3]
+        fields = cohort.split('&')
+        metadata['BldgType'] = fields[0]
+        metadata['Story'] = fields[1]
+        metadata['BldgHVAC'] = fields[2]
+        metadata['BldgVint'] = fields[3]
+        metadata['TechGroup'], metadata['TechType'] = fields[4].split('__', 1)
+        metadata['TechID'] = case
+        metadata['Cohort'] = cohort
+        metadata['Case'] = case
         yield (sqlfile, bldgloc, metadata)
 
 def gather_sim_data_long(study: Path, queryfile: Path, parallel=False):
