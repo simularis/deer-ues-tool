@@ -29,8 +29,6 @@ Changelog
 
 # Select columns from hourly files to apply DEER peak calculation
 DEERPEAK_COLUMNS = ["Electricity:Facility [J](Hourly)"]
-# Do you want to append "(units)"" in the column name, if available?
-APPEND_UNITS = False
 # Peak period versions to use for DEER peak calculation.
 PEAK_VERSION = ['E5152', 'E5350', 'CZ2025']
 
@@ -39,6 +37,7 @@ PEAK_VERSION = ['E5152', 'E5350', 'CZ2025']
 HOURLY_COLUMNS = None
 
 ##STEP 0: Setup (import all necessary libraries)
+from importlib.metadata import metadata
 import re
 from dataclasses import dataclass, asdict
 from sqlite3 import connect, Connection
@@ -461,19 +460,13 @@ def get_sim_deer_peak_long(
             Peak-period definition, such as E5152, E5350, or CZ2025.
         PeakDemand_kW
             Average demand over the DEER peak period, converted from hourly J.
-        PeakValue_Raw
-            Raw averaged EnergyPlus hourly value before unit conversion.
-        RawUnits
-            Description of the raw units.
     """
 
     empty_cols = [
         'simID',
         'VarName',
         'Version',
-        'PeakDemand_kW',
-        'PeakValue_Raw',
-        'RawUnits'
+        'PeakDemand_kW'
     ]
 
     # Load hourly data once for this simulation file.
@@ -495,22 +488,65 @@ def get_sim_deer_peak_long(
             # Average demand in kW = average J per hour / 3,600,000 J per kWh.
             if '[J](Hourly)' in varname:
                 peak_demand_kw = peak_value_raw / 3_600_000
-                raw_units = 'J per hourly timestep'
             else:
                 # Do not force non-J hourly variables into kW.
                 peak_demand_kw = None
-                raw_units = None
 
             records.append({
                 'simID': simID,
                 'VarName': varname,
                 'Version': version,
                 'PeakDemand_kW': peak_demand_kw,
-                'PeakValue_Raw': peak_value_raw,
-                'RawUnits': raw_units
             })
 
     return pd.DataFrame.from_records(records, columns=empty_cols)
+
+def get_sim_tabular(
+        conn: Connection,
+        resultspec: ResultSpec,
+        aggtype = 'sum'
+        ) -> tuple:
+    """Returns result information based on a single query from tabular reports.
+
+    Inputs:
+        conn: sqlite3.Connection
+            Open connection to the model instance results database (e.g. instance-out.sql)
+
+        aggtype: str
+            Aggregation type, e.g. sum. Explains how to combine multiple values where
+            the query includes a wildcard (*).
+
+    Returns (sim_data_detail, sim_data_agg) where:
+        sim_data_detail: pandas.DataFrame or None
+            DataFrame of raw results from the model, possibly including multiple rows in case of a wildcard.
+        sim_data_agg: float or None
+            Single value. In case of wildcard in query, this is calculated according to aggtype.
+    """
+    if not isinstance(resultspec, ResultSpec):
+        resultspec = makeResultSpec(resultspec)
+    query, agg_columns = build_query_with_special_cases(resultspec)
+
+    try:
+        sim_data_detail = pd.read_sql_query(query, conn,  params=asdict(resultspec), dtype={'Value':float})
+    except ValueError:
+        # If user requested a query that returns a string value
+        # To do: aggregation doesn't work with string type results.
+        sim_data_detail = pd.read_sql_query(query, conn,  params=asdict(resultspec))
+
+    if sim_data_detail.empty:
+        # No data found matching result spec
+        return None, None
+    elif len(sim_data_detail) == 1:
+        # Only one value, no aggregation required
+        return sim_data_detail, sim_data_detail.loc[0,'Value']
+    else:
+        # Aggregation requested. Calculate a single float value.
+        sim_data_agg = (
+            sim_data_detail
+            .groupby(agg_columns)
+            ['Value'].agg(aggtype).iloc[0]
+        )
+        return sim_data_detail, sim_data_agg
 
 def get_sim_tabular_long(
         queryfile: Path,
@@ -552,6 +588,55 @@ def get_sim_tabular_long(
     tabular_data = pd.concat(tabular_data_list)
 
     return tabular_data
+
+def get_sim_data_long(queryfile: Path,
+                             sqlfile: Path):
+    r"""
+    Read selected data entries from SQL outputs.
+    Result set specifications are parsed from query.txt, e.g. (resultspec, name).
+
+    Inputs:
+        queryfile: Path
+            The filename of a modelkit-style query.txt file.
+        sqlfile: Path
+            The filename of an EnergyPlus output file (SQLite format).
+
+    Returns:
+        sim_data: dict(str: float | None).
+            Mapping of (name, value) from query results.
+    """
+    sim_data = {} # To store results
+    with connect(sqlfile) as conn:
+        # Start with the query data results
+        listlist_query_path_and_name = parse_query_file(queryfile)
+        # Don't separate "groups" of queries but group them all together.
+        # result_sets = []
+        for list_query_path_and_name in listlist_query_path_and_name:
+            # Don't separate "groups" of queries but group them all together.
+            # sim_data_detail, sim_data_agg = [], []
+            for resultspec, user_column_name in list_query_path_and_name:
+                # 2025-01-22 Updated Nicholas Fette
+                # Default to the column name from the result query without attempting to append unit symbol from results.
+                # This avoids errors due to mismatched column names when a file is missing one or more results.
+                # Useful for concatenating results in a wide-format table.
+                output_column_name = user_column_name
+
+                sim_data_detail1, sim_data_agg1 = get_sim_tabular(conn, resultspec)
+                if sim_data_detail1 is None:
+                    # No data found matching the result spec.
+                    # 2025-01-22 Updated Nicholas Fette
+                    # For consistency between files, store a None/NULL result for this column.
+                    # To-do: In sqlite output mode, pandas may not be able to guess the dtype.
+                    # As a workaround, user may manually alter the sim_data table column types, then run the script.
+                    sim_data.update({output_column_name: None})
+                    continue
+                # This script does not compile detail of all rows included in wildcard queries:
+                #sim_data_detail.append(sim_data_detail1)
+                if sim_data_agg1 is not None:
+                    sim_data.update({output_column_name: sim_data_agg1})
+            #sim_data_agg.append(sizing_agg_row)
+
+    return sim_data
 
 def get_runs_instances(study: Path, search_pattern = '**/instance*-out.sql', exclude = 'instance-size-out.sql'):
     r"""Returns a list of all of SQLite output files in a modelkit study folder.
@@ -622,8 +707,8 @@ def get_runs_instances(study: Path, search_pattern = '**/instance*-out.sql', exc
         # E.g. filename = "CZ01/SFm&1&rDXGF&Ex&SpaceHtg_eq__GasFurnace/Msr-Res-GasFurnace-AFUE95-ECM/instance-out.sql"
         # pathsub = (r'runs/','')
         #metadata['File Name'] = re.sub(*pathsub, relstr, 1)
-        metadata['File Name'] = relstr
         metadata['simID'] = relstr
+        metadata['File Name'] = relstr
         metadata['BldgLoc'] = bldgloc
 
         parts = relpath.parts
@@ -637,7 +722,6 @@ def get_runs_instances(study: Path, search_pattern = '**/instance*-out.sql', exc
         metadata['TechGroup'], metadata['TechType'] = fields[4].split('__', 1)
         metadata['TechID'] = case
         metadata['Cohort'] = cohort
-        metadata['Case'] = case
         yield (sqlfile, bldgloc, metadata)
 
 def gather_sim_data_long(study: Path, queryfile: Path, parallel=False):
@@ -671,8 +755,8 @@ def gather_sim_data_long(study: Path, queryfile: Path, parallel=False):
     if not parallel:
         for sqlfile, bldgloc, metadata in tqdm.tqdm(list(get_runs_instances(study))):
             # Start the load operations and mark each future with its input arguments.
-            tabular_data = get_sim_tabular_long(queryfile, sqlfile)
-            yield (sqlfile, bldgloc, metadata, tabular_data)
+            sim_data = get_sim_data_long(queryfile, sqlfile)
+            yield (sqlfile, bldgloc, metadata, sim_data)
     else:
         list_sqlfile = list(get_runs_instances(study))
         # Use a concurrent.futures.Executor to achieve some parallelism.
@@ -686,7 +770,7 @@ def gather_sim_data_long(study: Path, queryfile: Path, parallel=False):
             # Queue each operation to read simulation data, returning a future.
             for (sqlfile, bldgloc, metadata) in list_sqlfile:
                 # Start the load operations and mark each future with its input arguments.
-                future = executor.submit(get_sim_tabular_long, queryfile, sqlfile)
+                future = executor.submit(get_sim_data_long, queryfile, sqlfile)
                 future_lookup[future] = (sqlfile, bldgloc, metadata)
 
             # Wait for futures to complete and show a progress bar.
@@ -697,11 +781,11 @@ def gather_sim_data_long(study: Path, queryfile: Path, parallel=False):
             ):
                 (sqlfile, bldgloc, metadata) = future_lookup[future]
                 try:
-                    tabular_data = future.result()
+                    sim_data = future.result()
                 except Exception as exc:
                     print(f'Reading {sqlfile} generated an exception: {exc}')
                 else:
-                    yield (sqlfile, bldgloc, metadata, tabular_data)
+                    yield (sqlfile, bldgloc, metadata, sim_data)
                     time.sleep(0.001)
 
 def gather_sim_data_to_sqlite_long(
@@ -709,26 +793,29 @@ def gather_sim_data_to_sqlite_long(
         queryfile: Path,
         sqlfile_out: Path,
         parallel=True):
-    """Write sim_metadata, sim_tabular, sim_deerpeak, and sim_hourly to one SQLite database."""
+    """Write sim_metadata, sim_data, sim_deerpeak, and sim_hourly to one SQLite database."""
 
     conn_out = connect(sqlfile_out)
 
     try:
         with conn_out:
             conn_out.execute('DROP TABLE IF EXISTS "sim_metadata";')
-            conn_out.execute('DROP TABLE IF EXISTS "sim_tabular";')
+            conn_out.execute('DROP TABLE IF EXISTS "sim_data";')
             conn_out.execute('DROP TABLE IF EXISTS "sim_deerpeak";')
             conn_out.execute('DROP TABLE IF EXISTS "sim_hourly";')
 
         gather = gather_sim_data_long(study, queryfile, parallel)
 
-        for sqlfile, bldgloc, metadata, tabular_data in gather:
+        for sqlfile, bldgloc, metadata, sim_data in gather:
             simID = metadata['simID']
             df_metadata = pd.DataFrame.from_dict([metadata])
 
-            # Add simID to tabular data so it can be joined to sim_metadata.
-            if not tabular_data.empty:
-                tabular_data.insert(0, 'simID', simID)
+            df_sim_data = pd.DataFrame()
+            if sim_data:
+                df_sim_data = (pd.DataFrame({'simID': simID,
+                                  'VarName': list(sim_data.keys()),
+                                  'Value': list(sim_data.values())
+                                  }))
 
             # Calculate long-format DEER peak data and hourly data for this simulation file.
             with connect(sqlfile) as conn_sim:
@@ -750,9 +837,9 @@ def gather_sim_data_to_sqlite_long(
                     if_exists='append'
                 )
 
-                if not tabular_data.empty:
-                    tabular_data.to_sql(
-                        'sim_tabular',
+                if not df_sim_data.empty:
+                    df_sim_data.to_sql(
+                        'sim_data',
                         conn_out,
                         index=False,
                         if_exists='append'
@@ -782,8 +869,8 @@ def gather_sim_data_to_sqlite_long(
                 'ON sim_metadata(simID);'
             )
             conn_out.execute(
-                'CREATE INDEX IF NOT EXISTS idx_sim_tabular_simID '
-                'ON sim_tabular(simID);'
+                'CREATE INDEX IF NOT EXISTS idx_sim_data_lookup '
+                'ON sim_data(simID, VarName);'
             )
             conn_out.execute(
                 'CREATE INDEX IF NOT EXISTS idx_sim_deerpeak_simID '
