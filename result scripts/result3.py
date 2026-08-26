@@ -550,19 +550,13 @@ def get_sim_deer_peak_long(
             Peak-period definition, such as E5152, E5350, or CZ2025.
         PeakDemand_kW
             Average demand over the DEER peak period, converted from hourly J.
-        PeakValue_Raw
-            Raw averaged EnergyPlus hourly value before unit conversion.
-        RawUnits
-            Description of the raw units.
      """
 
     empty_cols = [
         'simID',
         'VarName',
         'Version',
-        'PeakDemand_kW',
-        'PeakValue_Raw',
-        'RawUnits'
+        'PeakDemand_kW'
     ]
 
     # Load hourly data once for this simulation file.
