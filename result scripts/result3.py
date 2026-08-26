@@ -137,6 +137,7 @@ def _stop_logging():
 atexit.register(_stop_logging)
 
 
+## Functions for DEER peak period calculation, based on climate zone and version of DEER definition.
 def get_deer_peak_day_E5152(bldgloc: str):
     """Return a for DEER peak period start day lookups.
     Dates are from Resolution E-5152 (DEER2023) Attachment A, Table A-3-2.
@@ -280,14 +281,11 @@ def get_deer_peak_multipliers(BldgLoc: str,
         dpm = deer_peak_multipliers('CZ11')
         dpload = sum(load_data * dpm)
     """
-    if version == 'E5152':
-        peak_day = get_deer_peak_day_E5152(BldgLoc)
-    elif version == 'E5350':
-        peak_day = get_deer_peak_day_E5350(BldgLoc)
-    elif version == 'CZ2025':
-        peak_day = get_deer_peak_day_CZ2025(BldgLoc)
-    else:
-        raise ValueError(f'Unrecognized peak date version: {version}')
+    try:
+        peak_day = DEER_PEAK_DAY_LOOKUP[version](BldgLoc)
+    except KeyError as exc:
+        raise ValueError(f'Unrecognized peak date version: {version}') from exc
+
     # In case start_hr and end_hr are given in daylight saving time (DST), shift back to standard time.
     # time_dst = time_standard + 1
     start_hr -= 1 * dst
