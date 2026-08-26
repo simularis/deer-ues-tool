@@ -797,6 +797,7 @@ def get_runs_instances(study: Path, search_pattern = '**/instance*-out.sql', exc
         # E.g. filename = "CZ01/SFm&1&rDXGF&Ex&SpaceHtg_eq__GasFurnace/Msr-Res-GasFurnace-AFUE95-ECM/instance-out.sql"
         # pathsub = (r'runs/','')
         #metadata['File Name'] = re.sub(*pathsub, relstr, 1)
+        metadata['simID'] = relstr
         metadata['File Name'] = relstr
         metadata['BldgLoc'] = bldgloc
         metadata['BldgType'] = None
@@ -808,7 +809,21 @@ def get_runs_instances(study: Path, search_pattern = '**/instance*-out.sql', exc
         metadata['TechID'] = None
         metadata['Cohort'] = None
         metadata['Case'] = None
-
+        
+        # Try to get additional metadata, but don't fail if it doesn't match.
+        patterns = [
+            r'(.*/)?runs[^/]*/(?P<BldgLoc>CZ\d\d)/(?P<Cohort>[^/]+)/(?P<Case>[^/]+)/instance.*',
+            r'(.*/)?runs[^/]*/(?P<BldgLoc>CZ\d\d)/(?P<BldgType>\w+)&(?P<Story>\w+)&(?P<BldgHVAC>\w+)&(?P<BldgVint>[\w\-]+)&(?P<TechGroup>[\w\-]+)/(?P<TechID>[^/]+)/instance.*',
+            r'(.*/)?runs[^/]*/(?P<BldgLoc>CZ\d\d)/(?P<BldgType>\w+)&(?P<Story>\w+)&(?P<BldgHVAC>\w+)&(?P<BldgVint>[\w\-]+)&(?P<TechGroup>[\w\-]+)__(?P<TechType>[\w\-]+)/(?P<TechID>[^/]+)/instance.*',
+            r'(.*/)?runs[^/]*/(?P<BldgLoc>CZ\d\d)/(?P<BldgType>\w+)&(?P<Story>\w+)&(?P<BldgHVAC>\w+)&(?P<BldgVint>[\w\-]+)&(?P<TechGroupUnused>[\w\-]+)__(?P<TechTypeUnused>[\w\-]+)&(?P<TechGroup>[\w\-]+)__(?P<TechType>[\w\-]+)/(?P<TechID>[^/]+)/instance.*',
+        ]
+        for pattern in patterns:
+            m2 = re.match(pattern, relstr)
+            if m2:
+                sim_metadata = m2.groupdict()
+                sim_metadata.pop('TechGroupUnused', None)
+                sim_metadata.pop('TechTypeUnused', None)
+                metadata.update(sim_metadata)
         yield (sqlfile, bldgloc, metadata)
 
 def gather_sim_data_long(study: Path, queryfile: Path, parallel=False):
