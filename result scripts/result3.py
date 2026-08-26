@@ -893,14 +893,129 @@ def gather_sim_data_long(study: Path, queryfile: Path, parallel=False):
                     yield (sqlfile, bldgloc, metadata, sim_data)
                     time.sleep(0.001)
 
+"NORM UNITS CHUNK START"
+def normalize_match_key(series: pd.Series) -> pd.Series:
+    """Strip whitespace and make Excel/EnergyPlus merge keys case-insensitive."""
+    return series.astype("string").str.strip().str.casefold()
+
+def read_coil_list(
+    coil_list_file: Path,
+    sheet_name=0,
+) -> pd.DataFrame:
+    """Read and validate the coil-list workbook.
+
+    Required columns:
+        cooling coil name
+        building type
+    """
+    coil_list = pd.read_excel(
+        coil_list_file,
+        sheet_name=sheet_name,
+        engine="openpyxl",
+    )
+
+    required_columns = {"cooling coil name", "building type"}
+    missing_columns = required_columns.difference(coil_list.columns)
+    if missing_columns:
+        raise ValueError(
+            "The coil-list workbook is missing required column(s): "
+            + ", ".join(sorted(missing_columns))
+        )
+
+    coil_list = coil_list.copy()
+    coil_list["_CoilNameKey"] = normalize_match_key(
+        coil_list["cooling coil name"]
+    )
+    coil_list["_BuildingTypeKey"] = normalize_match_key(
+        coil_list["building type"]
+    )
+
+    # Duplicate matching keys would multiply sizing values during the merge.
+    return coil_list.drop_duplicates(
+        subset=["_CoilNameKey", "_BuildingTypeKey"]
+    )
+
+def get_result_sizing_agg(
+    conn: Connection,
+    queryfile: Path,
+    simID: str,
+    bldg_type: str,
+    coil_list: pd.DataFrame,
+    result_name: str = "Cooling Capacity",
+) -> pd.DataFrame:
+    """Return only the coil-list-filtered sizing aggregate for one simulation.
+
+    Normal query.txt aggregate results are not returned by this function because
+    they are already stored in sim_data.
+
+    Output columns:
+        simID, ResultName, Units, Value
+    """
+    output_columns = ["simID", "ResultName", "Units", "Value"]
+    sizing_detail_frames = []
+
+    for query_group in parse_query_file(queryfile):
+        for resultspec, _user_column_name in query_group:
+            detail, _aggregate_value = get_sim_tabular(conn, resultspec)
+            if detail is None:
+                continue
+
+            detail = detail.copy()
+            detail["Value"] = pd.to_numeric(detail["Value"], errors="coerce")
+            detail = detail.dropna(subset=["Value", "RowName"])
+            if not detail.empty:
+                sizing_detail_frames.append(detail)
+
+    if not sizing_detail_frames:
+        return pd.DataFrame(columns=output_columns)
+
+    sizing_detail = pd.concat(sizing_detail_frames, ignore_index=True)
+    sizing_detail["_CoilNameKey"] = normalize_match_key(
+        sizing_detail["RowName"]
+    )
+    sizing_detail["_BuildingTypeKey"] = str(bldg_type).strip().casefold()
+
+    # Match EnergyPlus RowName to Excel cooling coil name and the simulation's
+    # BldgType to the Excel building type.
+    filtered = sizing_detail.merge(
+        coil_list[["_CoilNameKey", "_BuildingTypeKey"]],
+        on=["_CoilNameKey", "_BuildingTypeKey"],
+        how="inner",
+        validate="many_to_one",
+    )
+
+    if filtered.empty:
+        return pd.DataFrame(columns=output_columns)
+
+    # Keep Units in the grouping so unlike quantities cannot be summed together.
+    sizing_agg = (
+        filtered.groupby("Units", dropna=False)["Value"]
+        .sum()
+        .reset_index()
+    )
+    sizing_agg.insert(0, "ResultName", result_name)
+    sizing_agg.insert(0, "simID", simID)
+
+    return sizing_agg[output_columns]
+"NORM UNITS CHUNK END"
+
 def gather_sim_data_to_sqlite_long(
         study: Path,
         queryfile: Path,
         sqlfile_out: Path,
-        parallel=True):
+        coil_list_file: Path = Path("coil_list.xlsx"),
+        coil_sheet=0,
+        coil_result_name: str = "Cooling Capacity",
+        parallel=True,
+        include_cooling_coils: bool = False
+):
     """Write sim_metadata, sim_data, sim_deerpeak, and sim_hourly to one SQLite database."""
 
     conn_out = connect(sqlfile_out)
+
+    coil_list = None
+    if include_cooling_coils:
+        coil_list = read_coil_list(coil_list_file, coil_sheet)
 
     try:
         with conn_out:
@@ -908,6 +1023,18 @@ def gather_sim_data_to_sqlite_long(
             conn_out.execute('DROP TABLE IF EXISTS "sim_data";')
             conn_out.execute('DROP TABLE IF EXISTS "sim_deerpeak";')
             conn_out.execute('DROP TABLE IF EXISTS "sim_hourly";')
+            if include_cooling_coils:
+                conn_out.execute('DROP TABLE IF EXISTS "result_sizing_agg";')
+                conn_out.execute(
+                    """
+                    CREATE TABLE result_sizing_agg (
+                    simID TEXT,
+                    ResultName TEXT,
+                    Units TEXT,
+                    Value REAL
+                    )
+                    """
+                )
 
         gather = gather_sim_data_long(study, queryfile, parallel)
 
@@ -936,6 +1063,17 @@ def gather_sim_data_to_sqlite_long(
                 )
 
                 hourly_data = get_sim_hourly_blob(conn_sim, simID)
+
+                sizing_data = pd.DataFrame()
+                if include_cooling_coils:
+                    sizing_data = get_result_sizing_agg(
+                        conn=conn_sim,
+                        queryfile=queryfile,
+                        simID=simID,
+                        bldg_type=metadata["BldgType"],
+                        coil_list=coil_list,
+                        result_name=coil_result_name
+                    )
 
             with conn_out:
                 df_metadata.to_sql(
@@ -970,6 +1108,14 @@ def gather_sim_data_to_sqlite_long(
                         if_exists='append'
                     )
 
+                if include_cooling_coils and not sizing_data.empty:
+                    sizing_data.to_sql(
+                        'result_sizing_agg',
+                        conn_out,
+                        index=False,
+                        if_exists='append'
+                    )
+
         # Add indexes after data are loaded.
         with conn_out:
             conn_out.execute(
@@ -992,7 +1138,15 @@ def gather_sim_data_to_sqlite_long(
                 'CREATE INDEX IF NOT EXISTS idx_sim_hourly_simID '
                 'ON sim_hourly(simID);'
             )
-
+            if include_cooling_coils:
+                conn_out.execute(
+                    'CREATE INDEX IF NOT EXISTS idx_result_sizing_agg_simID '
+                    'ON result_sizing_agg(simID);'
+                    )
+                conn_out.execute(
+                    'CREATE INDEX IF NOT EXISTS idx_result_sizing_agg_lookup '
+                    'ON result_sizing_agg(simID, ResultName);'
+                    )       
     finally:
         conn_out.close()
 
@@ -1013,6 +1167,7 @@ def build_cli_parser(parser: argparse.ArgumentParser,
     parser.add_argument('-P', '--parallel', action='store_false', help='Disable parallel mode.')
     parser.add_argument('--logfile', type=Path, default='result2.log',
                         help='Log file for script diagnostics.')
+    parser.add_argument('-c','--coil', action='store_true', help='Generate cooling coil sizing table (result_sizing_agg)')
 
 def cli_main():
     """Starts the script on command line."""
@@ -1022,7 +1177,7 @@ def cli_main():
     configure_logging(pargs.logfile)
     log.info(f"Writing diagnostics to {pargs.logfile}")
     try:
-        gather_sim_data_to_sqlite_long(pargs.study, pargs.queryfile, 'simdata.sqlite', pargs.parallel)
+        gather_sim_data_to_sqlite_long(study=pargs.study, queryfile=pargs.queryfile, outputfile='simdata.sqlite', parallel=pargs.parallel, include_cooling_coils=pargs.coil)
     finally:
         _stop_logging()
 
@@ -1041,7 +1196,7 @@ def gooey_main():
     configure_logging(pargs.logfile)
     log.info(f"Writing diagnostics to {pargs.logfile}")
     try:
-        gather_sim_data_to_sqlite_long(pargs.study, pargs.queryfile, 'simdata.sqlite', pargs.parallel)
+        gather_sim_data_to_sqlite_long(study=pargs.study, queryfile=pargs.queryfile, outputfile='simdata.sqlite', parallel=pargs.parallel, include_cooling_coils=pargs.coil)
     finally:
         _stop_logging()
 
@@ -1051,7 +1206,7 @@ def test():
     #study = Path(r'C:\DEER2026\SWHC012-nick\commercial measures\SWHC012-04 Occupancy Sensor')
     study = Path(r'C:\DEER2026\nf_com_testing_dhw\commercial measures\SWXX000-00 Measure Name')
     queryfile = Path(r'..\querylibrary\query_default.txt')
-    gather_sim_data_to_sqlite_long(study, queryfile, 'simdata.sqlite', parallel=False)
+    gather_sim_data_to_sqlite_long(study=study, queryfile=queryfile, outputfile='simdata.sqlite', parallel=False, include_cooling_coils=False)
 
 if "__main__" == __name__:
     cli_main()
