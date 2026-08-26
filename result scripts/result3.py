@@ -638,10 +638,10 @@ def get_sim_tabular(
         )
         return sim_data_detail, sim_data_agg
 
-def get_sim_peak_and_tabular(queryfile: Path,
-                             sqlfile: Path,
-                             bldgloc: str,
-                             metadata: dict):
+def get_sim_tabular_long(
+        queryfile: Path,
+        sqlfile: Path,
+        ):
     r"""
     Read selected data entries from SQL outputs.
     Result set specifications are parsed from query.txt, e.g. (resultspec, name).
@@ -652,16 +652,48 @@ def get_sim_peak_and_tabular(queryfile: Path,
             The filename of a modelkit-style query.txt file.
         sqlfile: Path
             The filename of an EnergyPlus output file (SQLite format).
-        bldgloc: str
-            The CEC climate zone, e.g. CZ01 through CZ16.
-        metadata: dict
-            An dictionary of identifier information prepended to the results.
-            For compatibility use metadata = {'File Name': 'path/to/model/instance-out.sql'}
+
+    Returns:
+        sim_data_detail: DataFrame.
+            Subset of TabularDataWithStrings rows matching result set query.
+    """
+    with connect(sqlfile) as conn:
+        # Start with the query data results
+        listlist_query_path_and_name = parse_query_file(queryfile)
+        tabular_data_list = []
+
+        # Don't separate "groups" of queries but group them all together.
+        for list_query_path_and_name in listlist_query_path_and_name:
+            for resultspec, user_column_name in list_query_path_and_name:
+
+                if not isinstance(resultspec, ResultSpec):
+                    resultspec = makeResultSpec(resultspec)
+
+                query, agg_columns = build_query_with_special_cases(resultspec)
+
+                sim_data_detail1 = pd.read_sql_query(query, conn,  params=asdict(resultspec))
+
+                tabular_data_list.append(sim_data_detail1)
+
+    tabular_data = pd.concat(tabular_data_list)
+
+    return tabular_data
+
+def get_sim_data_long(queryfile: Path,
+                             sqlfile: Path):
+    r"""
+    Read selected data entries from SQL outputs.
+    Result set specifications are parsed from query.txt, e.g. (resultspec, name).
+
+    Inputs:
+        queryfile: Path
+            The filename of a modelkit-style query.txt file.
+        sqlfile: Path
+            The filename of an EnergyPlus output file (SQLite format).
 
     Returns:
         sim_data: dict(str: float | None).
-            Mapping of (name, value) from both query results
-            and hourly averages over the DEER peak period.
+            Mapping of (name, value) from query results.
     """
     sim_data = metadata.copy() # To store results
     with connect(sqlfile) as conn:
