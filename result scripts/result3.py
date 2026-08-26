@@ -728,47 +728,6 @@ def get_sim_data_long(queryfile: Path,
 
     return sim_data
 
-def get_sim_tabular_long(
-        queryfile: Path,
-        sqlfile: Path,
-        ):
-    r"""
-    Read selected data entries from SQL outputs.
-    Result set specifications are parsed from query.txt, e.g. (resultspec, name).
-    Output columns will have units appended to name, like "name (Units)".
-
-    Inputs:
-        queryfile: Path
-            The filename of a modelkit-style query.txt file.
-        sqlfile: Path
-            The filename of an EnergyPlus output file (SQLite format).
-
-    Returns:
-        sim_data_detail: DataFrame.
-            Subset of TabularDataWithStrings rows matching result set query.
-    """
-    with connect(sqlfile) as conn:
-        # Start with the query data results
-        listlist_query_path_and_name = parse_query_file(queryfile)
-        tabular_data_list = []
- 
-        # Don't separate "groups" of queries but group them all together.
-        for list_query_path_and_name in listlist_query_path_and_name:
-            for resultspec, user_column_name in list_query_path_and_name:
-
-                if not isinstance(resultspec, ResultSpec):
-                    resultspec = makeResultSpec(resultspec)
-
-                query, agg_columns = build_query_with_special_cases(resultspec)
-
-                sim_data_detail1 = pd.read_sql_query(query, conn,  params=asdict(resultspec))
-                
-                tabular_data_list.append(sim_data_detail1)
-    
-    tabular_data = pd.concat(tabular_data_list)
-
-    return tabular_data
-
 def get_runs_instances(study: Path, search_pattern = '**/instance*-out.sql', exclude = 'instance-size-out.sql'):
     r"""Returns a list of all of SQLite output files in a modelkit study folder.
 
