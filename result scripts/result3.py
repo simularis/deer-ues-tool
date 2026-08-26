@@ -33,8 +33,6 @@ Changelog
 
 # Select columns from hourly files to apply DEER peak calculation
 DEERPEAK_COLUMNS = ["Electricity:Facility [J](Hourly)"]
-# Do you want to append "(units)"" in the column name, if available?
-APPEND_UNITS = False
 # Peak period versions to use for DEER peak calculation.
 PEAK_VERSION = ['E5152', 'E5350', 'CZ2025']
 
