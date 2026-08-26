@@ -578,19 +578,15 @@ def get_sim_deer_peak_long(
             # Average demand in kW = average J per hour / 3,600,000 J per kWh.
             if '[J](Hourly)' in varname:
                 peak_demand_kw = peak_value_raw / 3_600_000
-                raw_units = 'J per hourly timestep'
             else:
                 # Do not force non-J hourly variables into kW.
                 peak_demand_kw = None
-                raw_units = None
 
             records.append({
                 'simID': simID,
                 'VarName': varname,
                 'Version': version,
                 'PeakDemand_kW': peak_demand_kw,
-                'PeakValue_Raw': peak_value_raw,
-                'RawUnits': raw_units
             })
 
     return pd.DataFrame.from_records(records, columns=empty_cols)
