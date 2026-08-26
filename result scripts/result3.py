@@ -695,7 +695,7 @@ def get_sim_data_long(queryfile: Path,
         sim_data: dict(str: float | None).
             Mapping of (name, value) from query results.
     """
-    sim_data = metadata.copy() # To store results
+    sim_data = {} # To store results
     with connect(sqlfile) as conn:
         # Start with the query data results
         listlist_query_path_and_name = parse_query_file(queryfile)
@@ -711,12 +711,6 @@ def get_sim_data_long(queryfile: Path,
                 # Useful for concatenating results in a wide-format table.
                 output_column_name = user_column_name
 
-                if APPEND_UNITS:
-                    # For consistency between files, do not append "(units)" in the column name for wildcard queries.
-                    if "*" not in resultspec.to_string() and sim_data_detail1 is not None:
-                        units = sim_data_detail1['Units'].iloc[0]
-                        output_column_name = f"{user_column_name} ({units})"
-
                 sim_data_detail1, sim_data_agg1 = get_sim_tabular(conn, resultspec)
                 if sim_data_detail1 is None:
                     # No data found matching the result spec.
@@ -731,12 +725,6 @@ def get_sim_data_long(queryfile: Path,
                 if sim_data_agg1 is not None:
                     sim_data.update({output_column_name: sim_data_agg1})
             #sim_data_agg.append(sizing_agg_row)
-
-        # Now get the DEER Peak values from hourly data
-        # Column name(s) for DEER Peak average values are taken directly from hourly output column name.
-        deer_peak_values = get_sim_deer_peak(conn, bldgloc, loginfo=f"{sqlfile}")
-        if deer_peak_values is not None:
-            sim_data.update(deer_peak_values)
 
     return sim_data
 
