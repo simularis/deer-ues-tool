@@ -809,7 +809,7 @@ def get_runs_instances(study: Path, search_pattern = '**/instance*-out.sql', exc
         metadata['TechID'] = None
         metadata['Cohort'] = None
         metadata['Case'] = None
-        
+
         # Try to get additional metadata, but don't fail if it doesn't match.
         patterns = [
             r'(.*/)?runs[^/]*/(?P<BldgLoc>CZ\d\d)/(?P<Cohort>[^/]+)/(?P<Case>[^/]+)/instance.*',
@@ -857,8 +857,8 @@ def gather_sim_data_long(study: Path, queryfile: Path, parallel=False):
     if not parallel:
         for sqlfile, bldgloc, metadata in tqdm.tqdm(list(get_runs_instances(study))):
             # Start the load operations and mark each future with its input arguments.
-            tabular_data = get_sim_tabular_long(queryfile, sqlfile)
-            yield (sqlfile, bldgloc, metadata, tabular_data)
+            sim_data = get_sim_data_long(queryfile, sqlfile)
+            yield (sqlfile, bldgloc, metadata, sim_data)
     else:
         list_sqlfile = list(get_runs_instances(study))
         # Use a concurrent.futures.Executor to achieve some parallelism.
@@ -875,7 +875,7 @@ def gather_sim_data_long(study: Path, queryfile: Path, parallel=False):
             # Queue each operation to read simulation data, returning a future.
             for (sqlfile, bldgloc, metadata) in list_sqlfile:
                 # Start the load operations and mark each future with its input arguments.
-                future = executor.submit(get_sim_tabular_long, queryfile, sqlfile)
+                future = executor.submit(get_sim_data_long, queryfile, sqlfile)
                 future_lookup[future] = (sqlfile, bldgloc, metadata)
 
             # Wait for futures to complete and show a progress bar.
@@ -886,40 +886,115 @@ def gather_sim_data_long(study: Path, queryfile: Path, parallel=False):
             ):
                 (sqlfile, bldgloc, metadata) = future_lookup[future]
                 try:
-                    tabular_data = future.result()
+                    sim_data = future.result()
                 except Exception as exc:
                     log.exception(f'Reading {sqlfile} generated an exception: {exc}')
                 else:
-                    yield (sqlfile, bldgloc, metadata, tabular_data)
+                    yield (sqlfile, bldgloc, metadata, sim_data)
                     time.sleep(0.001)
 
-def gather_sim_data_to_sqlite_long(study: Path, queryfile: Path, sqlfile: Path,
-                              parallel = True):
+def gather_sim_data_to_sqlite_long(
+        study: Path,
+        queryfile: Path,
+        sqlfile_out: Path,
+        parallel=True):
+    """Write sim_metadata, sim_data, sim_deerpeak, and sim_hourly to one SQLite database."""
 
-    conn = connect(sqlfile)
+    conn_out = connect(sqlfile_out)
+
     try:
-        with conn:
-            conn.execute('DROP TABLE IF EXISTS "sim_metadata";')
-            conn.execute('DROP TABLE IF EXISTS "sim_tabular";')
+        with conn_out:
+            conn_out.execute('DROP TABLE IF EXISTS "sim_metadata";')
+            conn_out.execute('DROP TABLE IF EXISTS "sim_data";')
+            conn_out.execute('DROP TABLE IF EXISTS "sim_deerpeak";')
+            conn_out.execute('DROP TABLE IF EXISTS "sim_hourly";')
+
         gather = gather_sim_data_long(study, queryfile, parallel)
-        for (sqlfile, bldgloc, metadata, tabular_data) in gather:
-            # DEBUG
+
+        for sqlfile, bldgloc, metadata, sim_data in gather:
+            simID = metadata['simID']
             log.debug(f"Processing SQL file: {sqlfile}")
             log.debug(f"metadata: {metadata}")
-            log.debug(f"tabular_data: {tabular_data}")
-            
-            tabular_data.insert(0, "filename", metadata['File Name'])
-            log.debug(f"tabular_data dtypes: {tabular_data.dtypes}")
+            log.debug(f"sim_data: {sim_data}")
             df_metadata = pd.DataFrame.from_dict([metadata])
 
-            if tabular_data.empty:
-                continue
-            with conn:
-                df_metadata.to_sql('sim_metadata', conn, index=False, if_exists='append')
-                tabular_data.to_sql('sim_tabular', conn, index=False, if_exists='append')
+            df_sim_data = pd.DataFrame()
+            if sim_data:
+                df_sim_data = (pd.DataFrame({'simID': simID,
+                                  'VarName': list(sim_data.keys()),
+                                  'Value': list(sim_data.values())
+                                  }))
+
+            # Calculate long-format DEER peak data and hourly data for this simulation file.
+            with connect(sqlfile) as conn_sim:
+                deerpeak_data = get_sim_deer_peak_long(
+                    conn=conn_sim,
+                    bldgloc=bldgloc,
+                    simID=simID,
+                    column_filter=DEERPEAK_COLUMNS,
+                    versions=PEAK_VERSION
+                )
+
+                hourly_data = get_sim_hourly_blob(conn_sim, simID)
+
+            with conn_out:
+                df_metadata.to_sql(
+                    'sim_metadata',
+                    conn_out,
+                    index=False,
+                    if_exists='append'
+                )
+
+                if not df_sim_data.empty:
+                    df_sim_data.to_sql(
+                        'sim_data',
+                        conn_out,
+                        index=False,
+                        if_exists='append'
+                    )
+
+                if not deerpeak_data.empty:
+                    deerpeak_data.to_sql(
+                        'sim_deerpeak',
+                        conn_out,
+                        index=False,
+                        if_exists='append'
+                    )
+
+
+                if not hourly_data.empty:
+                    hourly_data.to_sql(
+                        'sim_hourly',
+                        conn_out,
+                        index=False,
+                        if_exists='append'
+                    )
+
+        # Add indexes after data are loaded.
+        with conn_out:
+            conn_out.execute(
+                'CREATE INDEX IF NOT EXISTS idx_sim_metadata_simID '
+                'ON sim_metadata(simID);'
+            )
+            conn_out.execute(
+                'CREATE INDEX IF NOT EXISTS idx_sim_data_lookup '
+                'ON sim_data(simID, VarName);'
+            )
+            conn_out.execute(
+                'CREATE INDEX IF NOT EXISTS idx_sim_deerpeak_simID '
+                'ON sim_deerpeak(simID);'
+            )
+            conn_out.execute(
+                'CREATE INDEX IF NOT EXISTS idx_sim_deerpeak_lookup '
+                'ON sim_deerpeak(simID, VarName, Version);'
+            )
+            conn_out.execute(
+                'CREATE INDEX IF NOT EXISTS idx_sim_hourly_simID '
+                'ON sim_hourly(simID);'
+            )
 
     finally:
-        conn.close()
+        conn_out.close()
 
 def build_cli_parser(parser: argparse.ArgumentParser,
                      study_kwargs = {},
