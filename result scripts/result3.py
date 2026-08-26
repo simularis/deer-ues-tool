@@ -550,7 +550,7 @@ def get_sim_deer_peak_long(
             Peak-period definition, such as E5152, E5350, or CZ2025.
         PeakDemand_kW
             Average demand over the DEER peak period, converted from hourly J.
-     """
+    """
 
     empty_cols = [
         'simID',
@@ -590,42 +590,6 @@ def get_sim_deer_peak_long(
             })
 
     return pd.DataFrame.from_records(records, columns=empty_cols)
-
-def get_sim_deer_peak(conn: Connection, bldgloc: str, column_filter=DEERPEAK_COLUMNS, loginfo: str = ''):
-    """Get simulation DEER Peak results from one EnergyPlus SQLite output file.
-
-    Inputs:
-        conn: sqlite3.Connection
-            An open connection to the SQLite output file from an EnergyPlus simulation.
-        bldgloc: str
-            The CEC climate zone used to lookup up DEER peak period dates.
-    Returns:
-        deer_peak_values: dict
-            Lookup where each item `(k, v)` represents the average value `v`
-            of the hourly variable named `k` over the DEER Peak Period.
-
-    E-5350: Effective PY2028
-    """
-    # Get all available hourly results with shape (N, 8760)
-    # Note: get_sim_hourly now trims design-day / warmup rows automatically
-    ReportDataWide = get_sim_hourly(conn, column_filter=column_filter)
-    # Safety check — should now have exactly 8760 after SQL filter
-    n_cols = ReportDataWide.shape[1]
-    if n_cols != 8760:
-        # Probably output variable is being stored at subhourly timesteps
-        # Cannot compute DEER peak values if the number of time steps is not 8760
-        log.warning(f"[{loginfo}] Simulation period expected 8760 time steps but found {n_cols}")
-        return None
-
-    # Get 8760-length mask for DEER Peak Period (normalized)
-    dpm = get_deer_peak_multipliers(bldgloc)
-    # Compute the average value over the DEER Peak Period
-    # In testing, pandas.DataFrame.mul() takes about 1 ms
-    #deer_peak_values = ReportDataWide.mul(dpm,axis=1).sum(axis=1).to_dict()
-    # In testing, pandas.DataFrame.to_numpy().dot() takes about 7 µs
-    deer_peak_values = dict(zip(ReportDataWide.index, ReportDataWide.to_numpy().dot(dpm)))
-    #
-    return deer_peak_values
 
 def get_sim_tabular(
         conn: Connection,
