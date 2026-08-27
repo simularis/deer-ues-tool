@@ -1177,7 +1177,7 @@ def cli_main():
     configure_logging(pargs.logfile)
     log.info(f"Writing diagnostics to {pargs.logfile}")
     try:
-        gather_sim_data_to_sqlite_long(study=pargs.study, queryfile=pargs.queryfile, outputfile='simdata.sqlite', parallel=pargs.parallel, include_cooling_coils=pargs.coil)
+        gather_sim_data_to_sqlite_long(pargs.study, pargs.queryfile, 'simdata.sqlite', parallel=pargs.parallel, include_cooling_coils=pargs.coil)
     finally:
         _stop_logging()
 
@@ -1196,7 +1196,7 @@ def gooey_main():
     configure_logging(pargs.logfile)
     log.info(f"Writing diagnostics to {pargs.logfile}")
     try:
-        gather_sim_data_to_sqlite_long(study=pargs.study, queryfile=pargs.queryfile, outputfile='simdata.sqlite', parallel=pargs.parallel, include_cooling_coils=pargs.coil)
+        gather_sim_data_to_sqlite_long(pargs.study, pargs.queryfile,'simdata.sqlite', parallel=pargs.parallel, include_cooling_coils=pargs.coil)
     finally:
         _stop_logging()
 
@@ -1206,7 +1206,7 @@ def test():
     #study = Path(r'C:\DEER2026\SWHC012-nick\commercial measures\SWHC012-04 Occupancy Sensor')
     study = Path(r'C:\DEER2026\nf_com_testing_dhw\commercial measures\SWXX000-00 Measure Name')
     queryfile = Path(r'..\querylibrary\query_default.txt')
-    gather_sim_data_to_sqlite_long(study=study, queryfile=queryfile, outputfile='simdata.sqlite', parallel=False, include_cooling_coils=False)
+    gather_sim_data_to_sqlite_long(study, queryfile,'simdata.sqlite', parallel=False, include_cooling_coils=False)
 
 if "__main__" == __name__:
     cli_main()
