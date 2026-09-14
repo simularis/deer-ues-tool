@@ -7,13 +7,13 @@ Date: 1-15-2026
 Revision log:
 02-16-2026 - Updated UI with more user inputs
 02-27-2026 - Revised user inputs to match updated norm unit query requirements
-03-02-2026 - Revised UI to run postprocessing.py with user inputs from Gooey
+03-02-2036 - Revised UI to run postprocessing.py with user inputs from Gooey
 '''
 
 from gooey import Gooey, GooeyParser
 # Use an absolute import to allow running this script directly for debugging purposes,
 # while still allowing the postprocessing function to be imported when the package is used normally.
-from postprocessing import postprocessing
+from deer_ues_tool import postprocessing
 
 @Gooey(program_name = 'Post-Processing'   
 )
